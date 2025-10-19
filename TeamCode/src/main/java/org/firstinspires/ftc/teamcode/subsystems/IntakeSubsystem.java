@@ -25,7 +25,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        motor.setVelocity(velocity/0.048, AngleUnit.RADIANS);
+        motor.setVelocity(velocity/0.1508, AngleUnit.RADIANS);
     }
 
     public void setTangentialVelocity(double velocity) {

@@ -35,6 +35,6 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setAngle(double angle) {
-        servo.set(angle); // TODO: CONVERSION FACTOR
+        servo.set(angle /2 / Math.PI); // TODO: CONVERSION FACTOR
     }
 }
