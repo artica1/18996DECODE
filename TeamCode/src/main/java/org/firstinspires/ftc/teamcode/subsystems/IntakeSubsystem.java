@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import static java.lang.Math.PI;
-
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
@@ -10,29 +9,66 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
 
+@Configurable
 public class IntakeSubsystem extends SubsystemBase {
+    private final MotorEx intakeMotor;
+    public static double OUTTAKE_SPEED = 0.25;
+    public static double HOLD_SPEED = 0.1;
 
-    private final MotorEx motor;
+    private IntakeState intakeState;
     private double velocity;
 
+    public enum IntakeState {
+        OUTTAKE,
+        HOLD,
+        CUSTOM,
+        DISABLED;
+        public double getValue() {
+            switch (this) {
+                case OUTTAKE:
+                    return OUTTAKE_SPEED;
+                case HOLD:
+                    return HOLD_SPEED;
+                case CUSTOM:
+                case DISABLED:
+                    return 0;
+                default:
+                    throw new IllegalArgumentException();
+            }
+        }
+    }
+
     public IntakeSubsystem(HardwareMap hardwareMap) {
-        motor = new MotorEx(hardwareMap, HardwareMapNames.INTAKE_MOTOR, Motor.GoBILDA.RPM_312); //todo change to match gear ratio?
-        motor.setRunMode(Motor.RunMode.VelocityControl);
-        motor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        motor.setVeloCoefficients(1, 0, 0);
-        motor.setFeedforwardCoefficients(0, 1, 0);
+        intakeMotor = new MotorEx(hardwareMap, HardwareMapNames.INTAKE_MOTOR, Motor.GoBILDA.RPM_1150);
+        intakeMotor.setRunMode(Motor.RunMode.VelocityControl);
+        intakeMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        intakeMotor.setVeloCoefficients(1, 0, 0);
+        intakeMotor.setFeedforwardCoefficients(0, 1, 0);
+        intakeMotor.set(0);
+
+        setIntakeState(IntakeState.DISABLED);
     }
 
     @Override
     public void periodic() {
-        motor.setVelocity(velocity/0.1508, AngleUnit.RADIANS);
+        if (intakeState.equals(IntakeState.CUSTOM)) {
+            intakeMotor.setVelocity(velocity * 83.333, AngleUnit.RADIANS); // chatgpt made this conversion value
+        }
     }
 
-    public void setTangentialVelocity(double velocity) {
+    public void setIntakeState(IntakeState intakeState) {
+        this.intakeState = intakeState;
+
+        intakeMotor.set(intakeState.getValue());
+    }
+
+    public void setCustomIntakeVelocity(double velocity) {
+        this.intakeState = IntakeState.CUSTOM;
+
         this.velocity = velocity;
     }
 
-    public void holdMotor() {
-        this.velocity = 1 / (2 * PI);
+    public IntakeState getIntakeState() {
+        return intakeState;
     }
 }

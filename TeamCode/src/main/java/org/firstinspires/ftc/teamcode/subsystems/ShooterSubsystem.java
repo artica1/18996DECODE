@@ -1,33 +1,39 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import static java.lang.Math.PI;
+
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.hardware.ServoEx;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
 
+@Configurable
 public class ShooterSubsystem extends SubsystemBase {
-
-    private final MotorEx motor;
-    private int rpm;
-    private final ServoEx servo;
+    private final MotorEx flywheelMotor;
+    private final ServoEx angleServo;
+    private double rpm;
+    private double angle;
 
     public ShooterSubsystem(HardwareMap hardwareMap) {
-        motor = new MotorEx(hardwareMap, HardwareMapNames.SHOOTER_MOTOR, Motor.GoBILDA.BARE);
-        motor.setRunMode(Motor.RunMode.VelocityControl);
-        motor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-        motor.setVeloCoefficients(1, 0, 0);
-        motor.setFeedforwardCoefficients(0, 1, 0);
+        flywheelMotor = new MotorEx(hardwareMap, HardwareMapNames.SHOOTER_MOTOR, Motor.GoBILDA.BARE);
+        flywheelMotor.setRunMode(Motor.RunMode.VelocityControl);
+        flywheelMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        flywheelMotor.setVeloCoefficients(1, 0, 0);
+        flywheelMotor.setFeedforwardCoefficients(0, 1, 0);
+        flywheelMotor.set(0);
 
-        servo = new ServoEx(hardwareMap, HardwareMapNames.SHOOTER_SERVO);
-        servo.set(0);
+        angleServo = new ServoEx(hardwareMap, HardwareMapNames.SHOOTER_SERVO, 365, AngleUnit.DEGREES); // THE SERVO IS NOW IN DEGREES 100%, set() TAKES DEGREES
+        angleServo.set(0);
     }
 
     @Override
     public void periodic() {
-        motor.set(rpm/6000.0);
+        flywheelMotor.setVelocity(rpm * (PI / 30), AngleUnit.RADIANS);
     }
 
     public void setRPM(int rpm) {
@@ -35,6 +41,21 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setAngle(double angle) {
-        servo.set(angle /2 / Math.PI); // TODO: CONVERSION FACTOR
+        if (angle < 0) {
+            setAngle(0);
+        } else if (angle > 50) {
+            setAngle(50);
+        } else {
+            this.angle = angle;
+            angleServo.set(angle);
+        }
+    }
+
+    public double getAngle() {
+        return angle;
+    }
+
+    public double getRpm() {
+        return rpm;
     }
 }
