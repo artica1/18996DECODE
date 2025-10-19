@@ -14,4 +14,10 @@ public class HardwareMapNames {
     public static String TRANSFER_SERVO_RIGHT = "leftBeltServo";
     public static String TRANSFER_SERVO_LEFT = "rightBeltServo";
     public static String GATE_SERVO = "gateServo";
+
+    public static String DRIVE_FRONT_LEFT = "frontLeft";
+    public static String DRIVE_FRONT_RIGHT = "frontRight";
+    public static String DRIVE_BACK_LEFT = "backLeft";
+    public static String DRIVE_BACK_RIGHT = "backRight";
+
 }
