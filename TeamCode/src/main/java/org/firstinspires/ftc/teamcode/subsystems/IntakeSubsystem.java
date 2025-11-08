@@ -12,8 +12,6 @@ import org.firstinspires.ftc.teamcode.HardwareMapNames;
 @Configurable
 public class IntakeSubsystem extends SubsystemBase {
     private final MotorEx intakeMotor;
-    public static double OUTTAKE_SPEED = 0.25;
-    public static double HOLD_SPEED = 0.1;
 
     private IntakeState intakeState;
     private double velocity;
@@ -22,13 +20,20 @@ public class IntakeSubsystem extends SubsystemBase {
         OUTTAKE,
         HOLD,
         CUSTOM,
+        INTAKE,
+        REVERSE,
         DISABLED;
+
         public double getValue() {
             switch (this) {
                 case OUTTAKE:
-                    return OUTTAKE_SPEED;
+                    return 0.75;
                 case HOLD:
-                    return HOLD_SPEED;
+                    return 0.1;
+                case INTAKE:
+                    return 1.0;
+                case REVERSE:
+                    return -1.0;
                 case CUSTOM:
                 case DISABLED:
                     return 0;
@@ -40,10 +45,10 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public IntakeSubsystem(HardwareMap hardwareMap) {
         intakeMotor = new MotorEx(hardwareMap, HardwareMapNames.INTAKE_MOTOR, Motor.GoBILDA.RPM_1150);
-        intakeMotor.setRunMode(Motor.RunMode.VelocityControl);
+        intakeMotor.setRunMode(Motor.RunMode.RawPower);
         intakeMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        intakeMotor.setVeloCoefficients(1, 0, 0);
-        intakeMotor.setFeedforwardCoefficients(0, 1, 0);
+        //intakeMotor.setVeloCoefficients(1, 0, 0);
+        //intakeMotor.setFeedforwardCoefficients(0, 1, 0);
         intakeMotor.set(0);
 
         setIntakeState(IntakeState.DISABLED);

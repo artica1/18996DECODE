@@ -11,12 +11,8 @@ import org.firstinspires.ftc.teamcode.HardwareMapNames;
 public class TransferSubsystem extends SubsystemBase {
     private final CRServoEx servoRight;
     private final CRServoEx servoLeft;
-    public static double INTAKE_SPEED = 0.75;
-    public static double OUTTAKE_SPEED = 0.25;
 
     private final ServoEx gateServo;
-    public static double OPEN_POS = 0.15;
-    public static double CLOSED_POS = 0.35;
 
     private BeltState beltState;
     private GatePosition gatePosition;
@@ -27,9 +23,9 @@ public class TransferSubsystem extends SubsystemBase {
         public double getValue() {
             switch (this) {
                 case OPEN:
-                    return OPEN_POS;
+                    return 0.15;
                 case CLOSED:
-                    return CLOSED_POS;
+                    return 0.35;
                 default:
                     throw new IllegalArgumentException();
             }
@@ -38,15 +34,18 @@ public class TransferSubsystem extends SubsystemBase {
 
     public enum BeltState {
         INTAKE,
+        REVERSE,
         OUTTAKE,
         DISABLED,
         CUSTOM;
         public double getValue() {
             switch (this) {
                 case INTAKE:
-                    return INTAKE_SPEED;
+                    return 1.0;
+                case REVERSE:
+                    return -1.0;
                 case OUTTAKE:
-                    return OUTTAKE_SPEED;
+                    return 1.0;
                 case CUSTOM:
                 case DISABLED:
                     return 0;
@@ -59,14 +58,14 @@ public class TransferSubsystem extends SubsystemBase {
     public TransferSubsystem(HardwareMap hardwareMap) {
         servoRight = new CRServoEx(hardwareMap, HardwareMapNames.TRANSFER_SERVO_RIGHT);
         servoRight.set(0);
+        servoRight.setInverted(true);
 
         servoLeft = new CRServoEx(hardwareMap, HardwareMapNames.TRANSFER_SERVO_LEFT);
         servoLeft.set(0);
-        servoLeft.setInverted(true);
 
         gateServo = new ServoEx(hardwareMap, HardwareMapNames.GATE_SERVO);
 
-        setGatePosition(GatePosition.OPEN);
+        setGatePosition(GatePosition.CLOSED);
         setBeltState(BeltState.DISABLED);
     }
 

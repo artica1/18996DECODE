@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.HardwareMapNames;
 
 @Configurable
 public class ShooterSubsystem extends SubsystemBase {
-    private final MotorEx flywheelMotor;
+    public final MotorEx flywheelMotor;
     private final ServoEx angleServo;
     private double rpm;
     private double angle;
@@ -25,15 +25,15 @@ public class ShooterSubsystem extends SubsystemBase {
         flywheelMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         flywheelMotor.setVeloCoefficients(1, 0, 0);
         flywheelMotor.setFeedforwardCoefficients(0, 1, 0);
-        flywheelMotor.set(0);
+        //flywheelMotor.set(0);
 
         angleServo = new ServoEx(hardwareMap, HardwareMapNames.SHOOTER_SERVO, 365, AngleUnit.DEGREES); // THE SERVO IS NOW IN DEGREES 100%, set() TAKES DEGREES
-        angleServo.set(0);
+        angleServo.set(60);
     }
 
     @Override
     public void periodic() {
-        flywheelMotor.setVelocity(rpm * (PI / 30), AngleUnit.RADIANS);
+        //flywheelMotor.setVelocity(rpm * (PI / 30), AngleUnit.RADIANS);
     }
 
     public void setRPM(int rpm) {
