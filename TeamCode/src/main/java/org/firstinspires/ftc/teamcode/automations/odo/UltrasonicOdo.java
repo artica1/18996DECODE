@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.odo;
+package org.firstinspires.ftc.teamcode.automations.odo;
 
 public class UltrasonicOdo {
     // ultrasonics management

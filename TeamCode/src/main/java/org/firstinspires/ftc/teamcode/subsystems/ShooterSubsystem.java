@@ -21,14 +21,14 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public ShooterSubsystem(HardwareMap hardwareMap) {
         flywheelMotor = new MotorEx(hardwareMap, HardwareMapNames.SHOOTER_MOTOR, Motor.GoBILDA.BARE);
-        flywheelMotor.setRunMode(Motor.RunMode.VelocityControl);
+        flywheelMotor.setRunMode(Motor.RunMode.RawPower);
         flywheelMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         flywheelMotor.setVeloCoefficients(1, 0, 0);
         flywheelMotor.setFeedforwardCoefficients(0, 1, 0);
         //flywheelMotor.set(0);
 
         angleServo = new ServoEx(hardwareMap, HardwareMapNames.SHOOTER_SERVO, 365, AngleUnit.DEGREES); // THE SERVO IS NOW IN DEGREES 100%, set() TAKES DEGREES
-        angleServo.set(60);
+        setAngle(20);
     }
 
     @Override
@@ -41,10 +41,10 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setAngle(double angle) {
-        if (angle < 0) {
-            setAngle(0);
-        } else if (angle > 50) {
-            setAngle(50);
+        if (angle < 20) {
+            angleServo.set(angle);
+        } else if (angle > 60) {
+            angleServo.set(60);
         } else {
             this.angle = angle;
             angleServo.set(angle);

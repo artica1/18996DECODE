@@ -41,10 +41,8 @@ public class TransferSubsystem extends SubsystemBase {
         public double getValue() {
             switch (this) {
                 case INTAKE:
-                    return 1.0;
-                case REVERSE:
                     return -1.0;
-                case OUTTAKE:
+                case REVERSE:
                     return 1.0;
                 case CUSTOM:
                 case DISABLED:
@@ -62,6 +60,7 @@ public class TransferSubsystem extends SubsystemBase {
 
         servoLeft = new CRServoEx(hardwareMap, HardwareMapNames.TRANSFER_SERVO_LEFT);
         servoLeft.set(0);
+        servoRight.setInverted(true);
 
         gateServo = new ServoEx(hardwareMap, HardwareMapNames.GATE_SERVO);
 

@@ -1,21 +1,17 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.drivebase.MecanumDrive;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
-import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
 import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.commands.ShootCommand;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 
@@ -85,10 +81,21 @@ public class FullTeleop extends CommandOpMode {
 
         gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
                 .whenPressed(
-                        new ShootCommand(robot)
+                        new SequentialCommandGroup(
+                                new InstantCommand(() -> robot.transfer.setGatePosition(TransferSubsystem.GatePosition.OPEN))
+                        )
+                )
+                .whenReleased(
+                        new SequentialCommandGroup(
+                                new InstantCommand(() -> robot.transfer.setGatePosition(TransferSubsystem.GatePosition.CLOSED))
+                        )
                 );
 
-        robot.shooter.flywheelMotor.set(0.0);
+        gamepad.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
+                .toggleWhenPressed(
+                        new InstantCommand(() -> robot.shooter.flywheelMotor.set(1.0)),
+                        new InstantCommand(() ->  robot.shooter.flywheelMotor.set(0.0))
+                );
     }
 
     @Override
@@ -97,7 +104,16 @@ public class FullTeleop extends CommandOpMode {
 
         drive.driveRobotCentric(-gamepad.getLeftX(), -gamepad.getLeftY(), -gamepad.getRightX(), false);
 
+        if(gamepad1.dpadUpWasPressed()) {
+            robot.shooter.setAngle(robot.shooter.getAngle() + 5);
+        }
+
+        else if(gamepad1.dpadDownWasPressed()) {
+            robot.shooter.setAngle(robot.shooter.getAngle() - 5);
+        }
+
         telemetry.addData("RPM", robot.shooter.flywheelMotor.getVelocity());
+        telemetry.addData("Angle", robot.shooter.getAngle());
 
         telemetry.update();
     }
