@@ -20,4 +20,6 @@ public class HardwareMapNames {
     public static String DRIVE_BACK_LEFT = "backLeft";
     public static String DRIVE_BACK_RIGHT = "backRight";
 
+    public static String LIMELIGHT = "limelight";
+
 }
