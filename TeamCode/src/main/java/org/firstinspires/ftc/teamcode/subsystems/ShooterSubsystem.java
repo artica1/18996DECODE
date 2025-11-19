@@ -20,31 +20,31 @@ public class ShooterSubsystem extends SubsystemBase {
     private double angle;
 
     public ShooterSubsystem(HardwareMap hardwareMap) {
-        flywheelMotor = new MotorEx(hardwareMap, HardwareMapNames.SHOOTER_MOTOR, Motor.GoBILDA.BARE);
-        flywheelMotor.setRunMode(Motor.RunMode.RawPower);
+        flywheelMotor = new MotorEx(hardwareMap, HardwareMapNames.SHOOTER_MOTOR, 28, 4500);
+        flywheelMotor.setRunMode(Motor.RunMode.VelocityControl);
         flywheelMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-        flywheelMotor.setVeloCoefficients(1, 0, 0);
-        flywheelMotor.setFeedforwardCoefficients(0, 1, 0);
-        //flywheelMotor.set(0);
+        flywheelMotor.setVeloCoefficients(0.1, 0, 0);
+        flywheelMotor.setFeedforwardCoefficients(0.9, 0.0, 0.0);
+        setRPM(0);
 
         angleServo = new ServoEx(hardwareMap, HardwareMapNames.SHOOTER_SERVO, 365, AngleUnit.DEGREES); // THE SERVO IS NOW IN DEGREES 100%, set() TAKES DEGREES
-        setAngle(20);
+        setAngle(2);
     }
 
     @Override
     public void periodic() {
-        //flywheelMotor.setVelocity(rpm * (PI / 30), AngleUnit.RADIANS);
+        flywheelMotor.setVelocity(-rpm);
     }
 
-    public void setRPM(int rpm) {
+    public void setRPM(double rpm) {
         this.rpm = rpm;
     }
 
     public void setAngle(double angle) {
-        if (angle < 20) {
-            angleServo.set(angle);
-        } else if (angle > 60) {
-            angleServo.set(60);
+        if (angle < 2) {
+            angleServo.set(2);
+        } else if (angle > 47) {
+            angleServo.set(47);
         } else {
             this.angle = angle;
             angleServo.set(angle);

@@ -36,7 +36,7 @@ public class IntakeSubsystem extends SubsystemBase {
                     return -1.0;
                 case CUSTOM:
                 case DISABLED:
-                    return 0;
+                    return 0.1;
                 default:
                     throw new IllegalArgumentException();
             }
@@ -47,8 +47,6 @@ public class IntakeSubsystem extends SubsystemBase {
         intakeMotor = new MotorEx(hardwareMap, HardwareMapNames.INTAKE_MOTOR, Motor.GoBILDA.RPM_1150);
         intakeMotor.setRunMode(Motor.RunMode.RawPower);
         intakeMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        //intakeMotor.setVeloCoefficients(1, 0, 0);
-        //intakeMotor.setFeedforwardCoefficients(0, 1, 0);
         intakeMotor.set(0);
 
         setIntakeState(IntakeState.DISABLED);

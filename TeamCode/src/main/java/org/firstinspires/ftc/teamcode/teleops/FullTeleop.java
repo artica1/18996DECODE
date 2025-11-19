@@ -47,6 +47,11 @@ public class FullTeleop extends CommandOpMode {
         backLeft = new Motor(hardwareMap, HardwareMapNames.DRIVE_BACK_LEFT);
         backRight = new Motor(hardwareMap, HardwareMapNames.DRIVE_BACK_RIGHT);
 
+        frontLeft.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        backLeft.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+
         drive = new MecanumDrive(frontLeft, frontRight, backLeft, backRight);
 
         gamepad = new GamepadEx(gamepad1);
@@ -93,8 +98,8 @@ public class FullTeleop extends CommandOpMode {
 
         gamepad.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
                 .toggleWhenPressed(
-                        new InstantCommand(() -> robot.shooter.flywheelMotor.set(1.0)),
-                        new InstantCommand(() ->  robot.shooter.flywheelMotor.set(0.0))
+                        new InstantCommand(() -> robot.shooter.setRPM(0.7)),
+                        new InstantCommand(() -> robot.shooter.setRPM(0))
                 );
     }
 
@@ -112,7 +117,16 @@ public class FullTeleop extends CommandOpMode {
             robot.shooter.setAngle(robot.shooter.getAngle() - 5);
         }
 
-        telemetry.addData("RPM", robot.shooter.flywheelMotor.getVelocity());
+        if(gamepad1.dpadRightWasPressed()) {
+            robot.shooter.setRPM(robot.shooter.getRpm() + 0.05);
+        }
+
+        else if(gamepad1.dpadLeftWasPressed()) {
+            robot.shooter.setRPM(robot.shooter.getRpm() - 0.05);
+        }
+
+        telemetry.addData("RPM", robot.shooter.flywheelMotor.getCorrectedVelocity());
+        telemetry.addData("SETPOINT", robot.shooter.getRpm());
         telemetry.addData("Angle", robot.shooter.getAngle());
 
         telemetry.update();

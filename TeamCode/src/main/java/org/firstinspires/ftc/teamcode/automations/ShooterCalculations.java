@@ -10,14 +10,14 @@ public class ShooterCalculations {
         return speedILUT.get(dist);
     }
 
-    public static double getAngle(double angle) {
-        return angleILUT.get(angle);
+    public static double getAngle(double dist) {
+        return angleILUT.get(dist);
     }
 
-    public ShooterCalculations() {
+    static {
+        angleILUT.add(10, 0.7);
+        speedILUT.add(10, 1400);
         // add data
-
-
         speedILUT.createLUT();
         angleILUT.createLUT();
     }

@@ -1,7 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.automations.drive.Drive;
+import org.firstinspires.ftc.teamcode.automations.odo.STATICLocalizer;
+import org.firstinspires.ftc.teamcode.automations.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
@@ -10,6 +14,8 @@ public class Robot {
     public IntakeSubsystem intake;
     public TransferSubsystem transfer;
     public ShooterSubsystem shooter;
+    public STATICLocalizer localizer;
+    public Drive drive;
     public HardwareMap hardwareMap;
     private final Team team;
 
@@ -21,12 +27,21 @@ public class Robot {
     public enum Subsystems {
         INTAKE,
         TRANSFER,
-        SHOOTER
+        SHOOTER,
+        LOCALIZER,
+        DRIVE
     }
 
     public Robot(HardwareMap hardwareMap, Team team, Subsystems... subsystems) {
         this.hardwareMap = hardwareMap;
         this.team = team;
+
+        if (team == Team.RED) {
+            GlobalDataStorage.goalPose = new Pose(144, 144);
+        }
+        else if (team == Team.BLUE) {
+            GlobalDataStorage.goalPose = new Pose(0, 144);
+        }
 
         for (Subsystems subsystem : subsystems) {
             if (subsystem == Subsystems.INTAKE) {
@@ -38,11 +53,17 @@ public class Robot {
             if (subsystem == Subsystems.SHOOTER) {
                 shooter = new ShooterSubsystem(hardwareMap);
             }
+            if (subsystem == Subsystems.LOCALIZER) {
+                localizer = new STATICLocalizer(hardwareMap, Constants.pinpointConstants);
+            }
+            if (subsystem == Subsystems.DRIVE) {
+                drive = new Drive(hardwareMap, localizer);
+            }
         }
     }
 
     public Robot(HardwareMap hardwareMap, Team team) {
-        this(hardwareMap, team, Robot.Subsystems.INTAKE, Subsystems.TRANSFER, Subsystems.SHOOTER);
+        this(hardwareMap, team, Robot.Subsystems.INTAKE, Subsystems.TRANSFER, Subsystems.SHOOTER, Subsystems.LOCALIZER, Subsystems.DRIVE);
     }
 
     public Robot(HardwareMap hardwareMap) {

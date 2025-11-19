@@ -1,15 +1,15 @@
 package org.firstinspires.ftc.teamcode.automations.drive;
 
+import com.pedropathing.localization.Localizer;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.drivebase.MecanumDrive;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 
-public class Drive extends MecanumDrive {
-    private AutoDrive autoDrive;
-    private ManualDrive manualDrive;
+public class Drive {
 
-    public Drive(Motor frontLeft, Motor frontRight, Motor backLeft, Motor backRight) {
-        super(frontLeft, frontRight, backLeft, backRight);
+    public Drive(HardwareMap hardwareMap, Localizer localizer) {
+
     }
 
-    // wrapper for two types of Driving
+    // global wrapper for two types of Driving, controls Pedro Follower
 }
