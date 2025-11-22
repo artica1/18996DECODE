@@ -7,6 +7,7 @@ import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
 import org.firstinspires.ftc.teamcode.Motif;
@@ -26,14 +27,14 @@ public class LimelightManager {
     // TODO check for degrees/radians in this
     public Pose getPose(double heading) {
         LLResult result = limelight.getLatestResult();
-        limelight.updateRobotOrientation(heading);
+        limelight.updateRobotOrientation(Math.toDegrees(heading));
 
         if (result != null && result.isValid() && result.getStaleness() < 100) {
 
             Pose3D llPose = result.getBotpose_MT2();
 
             if (llPose != null) {
-                return new Pose(llPose.getPosition().x, llPose.getPosition().y, heading);
+                return new Pose(llPose.getPosition().toUnit(DistanceUnit.INCH).x, llPose.getPosition().toUnit(DistanceUnit.INCH).y, heading);
             }
             else {
                 return null;

@@ -1,5 +1,11 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.configurables.annotations.IgnoreConfigurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
@@ -13,8 +19,12 @@ import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 
+import java.util.List;
+
+@Configurable
 @TeleOp
 public class FullTeleop extends CommandOpMode {
     private Robot robot;
@@ -27,20 +37,30 @@ public class FullTeleop extends CommandOpMode {
 
     private GamepadEx gamepad;
 
+    @IgnoreConfigurable
+    private static TelemetryManager panelsTelemetry;
+
     public void runOpMode() throws InterruptedException {
+        List<LynxModule> hubs = hardwareMap.getAll(LynxModule.class);
+        hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
+
         waitForStart();
         reset();
         initialize();
 
         // run the scheduler
         while (!isStopRequested() && opModeIsActive()) {
+            hubs.forEach(LynxModule::clearBulkCache);
             run();
         }
     }
 
     @Override
     public void initialize() {
+        panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+
         robot = new Robot(hardwareMap, Robot.Team.RED);
+        robot.localizer.setStartPose(new Pose(96, 72, Math.PI/2));
 
         frontLeft = new Motor(hardwareMap, HardwareMapNames.DRIVE_FRONT_LEFT);
         frontRight = new Motor(hardwareMap, HardwareMapNames.DRIVE_FRONT_RIGHT);
@@ -98,14 +118,28 @@ public class FullTeleop extends CommandOpMode {
 
         gamepad.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
                 .toggleWhenPressed(
-                        new InstantCommand(() -> robot.shooter.setRPM(0.7)),
-                        new InstantCommand(() -> robot.shooter.setRPM(0))
+                        new InstantCommand(() -> robot.shooter.setTargetTps(1500)),
+                        new InstantCommand(() -> robot.shooter.setTargetTps(0))
+                );
+
+        gamepad.getGamepadButton(GamepadKeys.Button.CIRCLE)
+                .whenPressed(
+                        new InstantCommand(() -> robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.IDLE))
+                );
+
+        gamepad.getGamepadButton(GamepadKeys.Button.CROSS)
+                .whenPressed(
+                        new SequentialCommandGroup(
+                            new InstantCommand(() -> robot.shooter.setTargetTps(1500)),
+                            new InstantCommand(() -> robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.ACTIVE))
+                        )
                 );
     }
 
     @Override
     public void run() {
         CommandScheduler.getInstance().run();
+        robot.localizer.update();
 
         drive.driveRobotCentric(-gamepad.getLeftX(), -gamepad.getLeftY(), -gamepad.getRightX(), false);
 
@@ -118,16 +152,25 @@ public class FullTeleop extends CommandOpMode {
         }
 
         if(gamepad1.dpadRightWasPressed()) {
-            robot.shooter.setRPM(robot.shooter.getRpm() + 0.05);
+            robot.shooter.setTargetTps(robot.shooter.getTargetTps() + 100);
         }
 
         else if(gamepad1.dpadLeftWasPressed()) {
-            robot.shooter.setRPM(robot.shooter.getRpm() - 0.05);
+            robot.shooter.setTargetTps(robot.shooter.getCurrentTps() - 100);
         }
 
-        telemetry.addData("RPM", robot.shooter.flywheelMotor.getCorrectedVelocity());
-        telemetry.addData("SETPOINT", robot.shooter.getRpm());
-        telemetry.addData("Angle", robot.shooter.getAngle());
+        panelsTelemetry.addData("Current Tps", robot.shooter.getCurrentTps());
+        panelsTelemetry.addData("Target Tps", robot.shooter.getTargetTps());
+        panelsTelemetry.addData("Shooter Motor State", robot.shooter.getShooterMotorState());
+        panelsTelemetry.addData("Error", robot.shooter.getError());
+
+        panelsTelemetry.addData("Angle", robot.shooter.getAngle());
+
+        panelsTelemetry.addData("Distance To Goal", robot.localizer.getDistanceToGoal());
+
+        panelsTelemetry.addData("Pose", robot.localizer.getPose());
+
+        panelsTelemetry.update(telemetry);
 
         telemetry.update();
     }

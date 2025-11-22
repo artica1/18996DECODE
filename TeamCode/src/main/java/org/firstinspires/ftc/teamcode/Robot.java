@@ -17,7 +17,6 @@ public class Robot {
     public STATICLocalizer localizer;
     public Drive drive;
     public HardwareMap hardwareMap;
-    private final Team team;
 
     public enum Team {
         RED,
@@ -34,7 +33,7 @@ public class Robot {
 
     public Robot(HardwareMap hardwareMap, Team team, Subsystems... subsystems) {
         this.hardwareMap = hardwareMap;
-        this.team = team;
+        GlobalDataStorage.team = team;
 
         if (team == Team.RED) {
             GlobalDataStorage.goalPose = new Pose(144, 144);
@@ -54,7 +53,7 @@ public class Robot {
                 shooter = new ShooterSubsystem(hardwareMap);
             }
             if (subsystem == Subsystems.LOCALIZER) {
-                localizer = new STATICLocalizer(hardwareMap, Constants.pinpointConstants);
+                localizer = new STATICLocalizer(hardwareMap);
             }
             if (subsystem == Subsystems.DRIVE) {
                 drive = new Drive(hardwareMap, localizer);
@@ -68,9 +67,5 @@ public class Robot {
 
     public Robot(HardwareMap hardwareMap) {
         this(hardwareMap, Team.RED);
-    }
-
-    public Team getTeam() {
-        return team;
     }
 }

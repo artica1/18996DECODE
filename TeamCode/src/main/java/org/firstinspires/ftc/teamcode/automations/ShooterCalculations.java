@@ -15,9 +15,9 @@ public class ShooterCalculations {
     }
 
     static {
-        angleILUT.add(10, 0.7);
-        speedILUT.add(10, 1400);
-        // add data
+        angleILUT.add(10, 50); // Pose(13, 89)
+        speedILUT.add(10, 1900); // Pose(13, 89)
+
         speedILUT.createLUT();
         angleILUT.createLUT();
     }

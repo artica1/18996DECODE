@@ -25,7 +25,7 @@ public class TransferSubsystem extends SubsystemBase {
                 case OPEN:
                     return 0.15;
                 case CLOSED:
-                    return 0.35;
+                    return 0.30;
                 default:
                     throw new IllegalArgumentException();
             }

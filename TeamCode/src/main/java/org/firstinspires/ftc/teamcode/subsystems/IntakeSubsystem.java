@@ -11,15 +11,13 @@ import org.firstinspires.ftc.teamcode.HardwareMapNames;
 
 @Configurable
 public class IntakeSubsystem extends SubsystemBase {
-    private final MotorEx intakeMotor;
+    public final MotorEx intakeMotor;
 
     private IntakeState intakeState;
-    private double velocity;
 
     public enum IntakeState {
         OUTTAKE,
         HOLD,
-        CUSTOM,
         INTAKE,
         REVERSE,
         DISABLED;
@@ -34,9 +32,8 @@ public class IntakeSubsystem extends SubsystemBase {
                     return 1.0;
                 case REVERSE:
                     return -1.0;
-                case CUSTOM:
                 case DISABLED:
-                    return 0.1;
+                    return 0.0;
                 default:
                     throw new IllegalArgumentException();
             }
@@ -52,23 +49,10 @@ public class IntakeSubsystem extends SubsystemBase {
         setIntakeState(IntakeState.DISABLED);
     }
 
-    @Override
-    public void periodic() {
-        if (intakeState.equals(IntakeState.CUSTOM)) {
-            intakeMotor.setVelocity(velocity * 83.333, AngleUnit.RADIANS); // chatgpt made this conversion value
-        }
-    }
-
     public void setIntakeState(IntakeState intakeState) {
         this.intakeState = intakeState;
 
         intakeMotor.set(intakeState.getValue());
-    }
-
-    public void setCustomIntakeVelocity(double velocity) {
-        this.intakeState = IntakeState.CUSTOM;
-
-        this.velocity = velocity;
     }
 
     public IntakeState getIntakeState() {

@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.automations.odo;
 
 import androidx.annotation.NonNull;
 
-import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.pedropathing.ftc.localization.localizers.PinpointLocalizer;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.localization.Localizer;
@@ -10,6 +9,7 @@ import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.GlobalDataStorage;
+import org.firstinspires.ftc.teamcode.automations.pedroPathing.Constants;
 
 public class STATICLocalizer implements Localizer {
     private final PinpointLocalizer pinpoint;
@@ -25,14 +25,16 @@ public class STATICLocalizer implements Localizer {
         PINPOINT_ONLY
     }
 
-    public STATICLocalizer(HardwareMap hardwareMap, PinpointConstants constants){ this(hardwareMap, constants, new Pose());}
+    public STATICLocalizer(HardwareMap hardwareMap) {
+        this(hardwareMap, new Pose());
+    }
 
-    public STATICLocalizer(HardwareMap hardwareMap, PinpointConstants constants, Pose setStartPose){
-        pinpoint = new PinpointLocalizer(hardwareMap, constants, setStartPose);
+    public STATICLocalizer(HardwareMap hardwareMap, Pose setStartPose) {
+        pinpoint = new PinpointLocalizer(hardwareMap, Constants.pinpointConstants, setStartPose);
         limelightManager = new LimelightManager(hardwareMap);
         ultrasonicsManager = new UltrasonicsManager(hardwareMap);
 
-        setLocalizerMode(LocalizerMode.All);
+        setLocalizerMode(LocalizerMode.PINPOINT_ONLY);
     }
 
     @Override
@@ -72,6 +74,8 @@ public class STATICLocalizer implements Localizer {
         if (localizerMode == LocalizerMode.All) {
             setPose(limelightManager.getPose(getIMUHeading()));
         }
+
+        GlobalDataStorage.robotPose = getPose();
     }
 
     @Override
@@ -86,12 +90,12 @@ public class STATICLocalizer implements Localizer {
 
     @Override
     public double getLateralMultiplier() {
-        return Double.NaN;;
+        return Double.NaN;
     }
 
     @Override
     public double getTurningMultiplier() {
-        return Double.NaN;;
+        return Double.NaN;
     }
 
     @Override
@@ -110,12 +114,15 @@ public class STATICLocalizer implements Localizer {
         return pinpoint.isNAN();
     }
 
+    // todo sanity check cuz ultrasonics might be tweaking
     public double getDistanceToGoal() {
         Pose currentPose = getPose();
         if (currentPose.distanceFrom(GlobalDataStorage.goalPose) > 60
                 || Math.acos(currentPose.getHeadingAsUnitVector().dot(GlobalDataStorage.goalPose.getHeadingAsUnitVector())) > Math.toRadians(10)
+                || currentPose.distanceFrom(GlobalDataStorage.goalPose) - ultrasonicsManager.getDistance() > 5
                 || localizerMode == LocalizerMode.NO_ULTRASONICS
-                || localizerMode == LocalizerMode.PINPOINT_ONLY)
+                || localizerMode == LocalizerMode.PINPOINT_ONLY
+                || Double.isNaN(ultrasonicsManager.getDistance()))
         {
             return currentPose.distanceFrom(GlobalDataStorage.goalPose);
         } else {
