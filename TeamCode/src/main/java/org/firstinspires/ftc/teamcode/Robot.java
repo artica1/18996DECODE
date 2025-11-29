@@ -64,8 +64,4 @@ public class Robot {
     public Robot(HardwareMap hardwareMap, Team team) {
         this(hardwareMap, team, Robot.Subsystems.INTAKE, Subsystems.TRANSFER, Subsystems.SHOOTER, Subsystems.LOCALIZER, Subsystems.DRIVE);
     }
-
-    public Robot(HardwareMap hardwareMap) {
-        this(hardwareMap, Team.RED);
-    }
 }

@@ -30,11 +30,14 @@ public class STATICLocalizer implements Localizer {
     }
 
     public STATICLocalizer(HardwareMap hardwareMap, Pose setStartPose) {
+        this(hardwareMap, setStartPose, LocalizerMode.PINPOINT_ONLY);
+    }
+
+    public STATICLocalizer(HardwareMap hardwareMap, Pose setStartPose, LocalizerMode localizerMode) {
         pinpoint = new PinpointLocalizer(hardwareMap, Constants.pinpointConstants, setStartPose);
         limelightManager = new LimelightManager(hardwareMap);
         ultrasonicsManager = new UltrasonicsManager(hardwareMap);
-
-        setLocalizerMode(LocalizerMode.PINPOINT_ONLY);
+        this.localizerMode = localizerMode;
     }
 
     @Override
@@ -59,7 +62,9 @@ public class STATICLocalizer implements Localizer {
 
     @Override
     public void setPose(Pose setPose) {
-        pinpoint.setPose(setPose);
+        if (setPose != null) {
+            pinpoint.setPose(setPose);
+        }
     }
 
     @Override
@@ -71,8 +76,8 @@ public class STATICLocalizer implements Localizer {
 
         pinpoint.update();
 
-        if (localizerMode == LocalizerMode.All) {
-            setPose(limelightManager.getPose(getIMUHeading()));
+        if (localizerMode == LocalizerMode.All || localizerMode == LocalizerMode.NO_ULTRASONICS) {
+           // setPose(limelightManager.getPose(getIMUHeading()));
         }
 
         GlobalDataStorage.robotPose = getPose();

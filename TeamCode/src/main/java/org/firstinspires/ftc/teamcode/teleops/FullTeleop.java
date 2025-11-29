@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
+import static java.lang.Math.PI;
+import static java.lang.Math.atan2;
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -7,17 +10,20 @@ import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
-import com.seattlesolvers.solverslib.drivebase.MecanumDrive;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
-import com.seattlesolvers.solverslib.hardware.motors.Motor;
 
-import org.firstinspires.ftc.teamcode.HardwareMapNames;
+import org.firstinspires.ftc.teamcode.GlobalDataStorage;
 import org.firstinspires.ftc.teamcode.Robot;
+import org.firstinspires.ftc.teamcode.automations.ShooterCalculations;
+import org.firstinspires.ftc.teamcode.automations.commands.AutoShootCommand;
+import org.firstinspires.ftc.teamcode.automations.commands.AdjustShooterCommand;
+import org.firstinspires.ftc.teamcode.automations.drive.Drive;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
@@ -29,13 +35,10 @@ import java.util.List;
 public class FullTeleop extends CommandOpMode {
     private Robot robot;
 
-    private Motor frontLeft;
-    private Motor frontRight;
-    private Motor backLeft;
-    private Motor backRight;
-    private MecanumDrive drive;
-
     private GamepadEx gamepad;
+
+    CommandBase autoShootCommand;
+    CommandBase liveAdjustShooterCommand;
 
     @IgnoreConfigurable
     private static TelemetryManager panelsTelemetry;
@@ -59,104 +62,110 @@ public class FullTeleop extends CommandOpMode {
     public void initialize() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
-        robot = new Robot(hardwareMap, Robot.Team.RED);
-        robot.localizer.setStartPose(new Pose(96, 72, Math.PI/2));
-
-        frontLeft = new Motor(hardwareMap, HardwareMapNames.DRIVE_FRONT_LEFT);
-        frontRight = new Motor(hardwareMap, HardwareMapNames.DRIVE_FRONT_RIGHT);
-        backLeft = new Motor(hardwareMap, HardwareMapNames.DRIVE_BACK_LEFT);
-        backRight = new Motor(hardwareMap, HardwareMapNames.DRIVE_BACK_RIGHT);
-
-        frontLeft.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        frontRight.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        backLeft.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        backRight.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-
-        drive = new MecanumDrive(frontLeft, frontRight, backLeft, backRight);
+        robot = new Robot(hardwareMap, Robot.Team.BLUE);
+        robot.drive.follower.setStartingPose(GlobalDataStorage.robotPose);
+        //robot.localizer.setStartPose(new Pose(48, 72, PI/2));
 
         gamepad = new GamepadEx(gamepad1);
 
-        gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
-                .whenPressed(
-                        new SequentialCommandGroup(
-                                new InstantCommand(() -> robot.intake.setIntakeState(IntakeSubsystem.IntakeState.INTAKE)),
-                                new InstantCommand(() -> robot.transfer.setBeltState(TransferSubsystem.BeltState.INTAKE))
-                        )
-                )
-                .whenReleased(
-                        new SequentialCommandGroup(
-                                new InstantCommand(() -> robot.intake.setIntakeState(IntakeSubsystem.IntakeState.DISABLED)),
-                                new InstantCommand(() -> robot.transfer.setBeltState(TransferSubsystem.BeltState.DISABLED))
-                        )
-                );
+        autoShootCommand = new InstantCommand();
+        liveAdjustShooterCommand = new InstantCommand();
 
-        gamepad.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
-                .whenPressed(
-                        new SequentialCommandGroup(
-                                new InstantCommand(() -> robot.intake.setIntakeState(IntakeSubsystem.IntakeState.REVERSE)),
-                                new InstantCommand(() -> robot.transfer.setBeltState(TransferSubsystem.BeltState.REVERSE))
-                        )
-                )
-                .whenReleased(
-                        new SequentialCommandGroup(
-                                new InstantCommand(() -> robot.intake.setIntakeState(IntakeSubsystem.IntakeState.DISABLED)),
-                                new InstantCommand(() -> robot.transfer.setBeltState(TransferSubsystem.BeltState.DISABLED))
-                        )
-                );
-
-        gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
-                .whenPressed(
-                        new SequentialCommandGroup(
-                                new InstantCommand(() -> robot.transfer.setGatePosition(TransferSubsystem.GatePosition.OPEN))
-                        )
-                )
-                .whenReleased(
-                        new SequentialCommandGroup(
-                                new InstantCommand(() -> robot.transfer.setGatePosition(TransferSubsystem.GatePosition.CLOSED))
-                        )
-                );
-
-        gamepad.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
-                .toggleWhenPressed(
-                        new InstantCommand(() -> robot.shooter.setTargetTps(1500)),
-                        new InstantCommand(() -> robot.shooter.setTargetTps(0))
-                );
-
+        // AUTO SHOOT SYSTEM (Left Back Paddle)
         gamepad.getGamepadButton(GamepadKeys.Button.CIRCLE)
-                .whenPressed(
-                        new InstantCommand(() -> robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.IDLE))
-                );
+                .whenPressed(() -> {
+                    robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
+                    robot.transfer.setBeltState(TransferSubsystem.BeltState.HOLD);
 
+                    liveAdjustShooterCommand = new AdjustShooterCommand(robot);
+                    schedule(liveAdjustShooterCommand.perpetually());
+                })
+                .whenReleased(() -> {
+                    liveAdjustShooterCommand.end(true);
+                    autoShootCommand = new AutoShootCommand(robot, 3);
+                    schedule(autoShootCommand);
+                });
+
+        // HOLD AIM (Right Back Paddle)
         gamepad.getGamepadButton(GamepadKeys.Button.CROSS)
-                .whenPressed(
-                        new SequentialCommandGroup(
-                            new InstantCommand(() -> robot.shooter.setTargetTps(1500)),
-                            new InstantCommand(() -> robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.ACTIVE))
-                        )
-                );
+                .whenPressed(() -> {
+                    robot.drive.setHoldPoint(
+                            robot.localizer.getPose().setHeading(
+                                    atan2(
+                                            GlobalDataStorage.goalPose.minus(robot.localizer.getPose()).getY(),
+                                            GlobalDataStorage.goalPose.minus(robot.localizer.getPose()).getX()
+                                    )
+                            )
+                    );
+                    robot.drive.setDriveMode(Drive.DriveMode.HOLD_POINT);
+                }
+                )
+                .whenReleased(() -> robot.drive.setDriveMode(Drive.DriveMode.MANUAL));
+
+        // GATE CONTROL
+        gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
+                .whenPressed(() -> {
+                    robot.transfer.setGatePosition(TransferSubsystem.GatePosition.OPEN);
+                    ShooterSubsystem.setkP(0.005);
+                })
+                .whenReleased(() -> {
+                    robot.transfer.setGatePosition(TransferSubsystem.GatePosition.CLOSED);
+                    ShooterSubsystem.setkP(0.001);
+                });
+
+        // INTAKE/BELTS OUTTAKE MODE
+        gamepad.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
+                .whenPressed(() -> {
+                    robot.transfer.setBeltState(TransferSubsystem.BeltState.INTAKE);
+                    robot.intake.setIntakeState(IntakeSubsystem.IntakeState.OUTTAKE);
+                })
+                .whenReleased(() -> {
+                    robot.transfer.setBeltState(TransferSubsystem.BeltState.CUSTOM);
+                    robot.intake.setIntakeState(IntakeSubsystem.IntakeState.CUSTOM);
+                });
+
+        // IDLE/RESET
+        gamepad.getGamepadButton(GamepadKeys.Button.SQUARE)
+                .whenPressed(() -> {
+                    robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.IDLE);
+                    robot.drive.setDriveMode(Drive.DriveMode.MANUAL);
+                    autoShootCommand.end(true);
+                });
+
+        // AUTO SET SPEED AND ANGLE
+        gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
+                .whenPressed(new AdjustShooterCommand(robot));
+
+        // SET INSTANCED
+        gamepad.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
+                .whenPressed(() -> robot.shooter.setLocal());
+
+        // EDIT INSTANCED
+        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_UP)
+                .whenPressed(() -> robot.shooter.setLocalAngle(robot.shooter.getLocalAngle() + 5));
+
+        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
+                .whenPressed(() -> robot.shooter.setLocalAngle(robot.shooter.getLocalAngle() - 5));
+
+        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT)
+                .whenPressed(() -> robot.shooter.setLocalTargetTps(robot.shooter.getLocalTargetTps() + 100));
+
+        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
+                .whenPressed(() -> robot.shooter.setLocalTargetTps(robot.shooter.getLocalTargetTps() - 100));
     }
 
     @Override
     public void run() {
         CommandScheduler.getInstance().run();
         robot.localizer.update();
+        robot.drive.update();
 
-        drive.driveRobotCentric(-gamepad.getLeftX(), -gamepad.getLeftY(), -gamepad.getRightX(), false);
+        robot.drive.setTeleOpVectors(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 
-        if(gamepad1.dpadUpWasPressed()) {
-            robot.shooter.setAngle(robot.shooter.getAngle() + 5);
-        }
-
-        else if(gamepad1.dpadDownWasPressed()) {
-            robot.shooter.setAngle(robot.shooter.getAngle() - 5);
-        }
-
-        if(gamepad1.dpadRightWasPressed()) {
-            robot.shooter.setTargetTps(robot.shooter.getTargetTps() + 100);
-        }
-
-        else if(gamepad1.dpadLeftWasPressed()) {
-            robot.shooter.setTargetTps(robot.shooter.getCurrentTps() - 100);
+        if (!gamepad1.left_bumper && autoShootCommand.isFinished()) {
+            double triggerValue = Math.pow(gamepad1.right_trigger - gamepad1.left_trigger, 0.2);
+            robot.transfer.setCustomBeltSpeed(triggerValue);
+            robot.intake.setCustomIntakeSpeed(triggerValue);
         }
 
         panelsTelemetry.addData("Current Tps", robot.shooter.getCurrentTps());
@@ -169,6 +178,8 @@ public class FullTeleop extends CommandOpMode {
         panelsTelemetry.addData("Distance To Goal", robot.localizer.getDistanceToGoal());
 
         panelsTelemetry.addData("Pose", robot.localizer.getPose());
+
+        panelsTelemetry.addData("GLOBAL POSE", GlobalDataStorage.goalPose);
 
         panelsTelemetry.update(telemetry);
 

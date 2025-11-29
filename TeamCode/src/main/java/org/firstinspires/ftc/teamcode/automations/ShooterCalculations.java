@@ -15,8 +15,32 @@ public class ShooterCalculations {
     }
 
     static {
-        angleILUT.add(10, 50); // Pose(13, 89)
-        speedILUT.add(10, 1900); // Pose(13, 89)
+        // X MUST BE INCREASING ORDER WHEN ADDING
+        // IDFK WHY
+        // otherwise it literally crashes the entire robot with no error message so dont do it
+
+        angleILUT.add(20, 5);
+        speedILUT.add(20, 1100);
+
+        angleILUT.add(40, 10);
+        speedILUT.add(40, 1100);
+
+        angleILUT.add(60, 40);
+        speedILUT.add(60, 1180);
+
+        angleILUT.add(70, 40);
+        speedILUT.add(70, 1260);
+
+        angleILUT.add(75, 40);
+        speedILUT.add(75, 1300);
+
+        angleILUT.add(100, 45);
+        speedILUT.add(100, 1460);
+
+
+        angleILUT.add(500, 45);
+        speedILUT.add(500, 2000);
+
 
         speedILUT.createLUT();
         angleILUT.createLUT();

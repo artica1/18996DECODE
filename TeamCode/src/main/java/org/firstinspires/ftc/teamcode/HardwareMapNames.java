@@ -21,8 +21,8 @@ public class HardwareMapNames {
     public static String DRIVE_BACK_RIGHT = "backRight";
 
     public static String LIMELIGHT = "limelight";
+    public static String WEBCAM = "webcam";
     public static String PINPOINT = "pinpoint";
     public static String LEFT_ULTRASONIC = "leftUltrasonic";
     public static String RIGHT_ULTRASONIC = "rightUltrasonic";
-
 }

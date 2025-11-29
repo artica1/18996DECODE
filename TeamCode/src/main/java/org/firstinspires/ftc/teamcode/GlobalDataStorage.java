@@ -11,6 +11,7 @@ public class GlobalDataStorage {
     public static Robot.Team team;
     public static Pose goalPose;
     public static Pose robotPose;
+
     public static double angleTrim = 0;
     public static int velocityTrim = 0;
 }

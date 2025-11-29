@@ -20,18 +20,20 @@ public class IntakeSubsystem extends SubsystemBase {
         HOLD,
         INTAKE,
         REVERSE,
+        CUSTOM,
         DISABLED;
 
         public double getValue() {
             switch (this) {
                 case OUTTAKE:
-                    return 0.75;
+                    return 1.0;
                 case HOLD:
                     return 0.1;
                 case INTAKE:
                     return 1.0;
                 case REVERSE:
                     return -1.0;
+                case CUSTOM:
                 case DISABLED:
                     return 0.0;
                 default:
@@ -53,6 +55,12 @@ public class IntakeSubsystem extends SubsystemBase {
         this.intakeState = intakeState;
 
         intakeMotor.set(intakeState.getValue());
+    }
+
+    public void setCustomIntakeSpeed(double speed) {
+        intakeState = IntakeState.CUSTOM;
+
+        intakeMotor.set(speed);
     }
 
     public IntakeState getIntakeState() {

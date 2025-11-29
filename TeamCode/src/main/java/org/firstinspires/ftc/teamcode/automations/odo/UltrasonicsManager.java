@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.automations.odo;
 
-import static java.lang.Math.atan;
-
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -19,22 +17,13 @@ public class UltrasonicsManager {
     }
 
     public double getDistance() {
-        //return getDistanceFromVoltage((leftUltrasonic.getVoltage() + rightUltrasonic.getVoltage()) / 2);
-
         if (GlobalDataStorage.team == Robot.Team.BLUE) {
-            return getDistanceFromVoltage(rightUltrasonic.getVoltage());
+            return getDistanceFromVoltage(rightUltrasonic.getVoltage()) - 4.8;
         } else if (GlobalDataStorage.team == Robot.Team.RED) {
-            return getDistanceFromVoltage(leftUltrasonic.getVoltage());
+            return getDistanceFromVoltage(leftUltrasonic.getVoltage()) - 4.8;
         } else {
             return Double.NaN;
         }
-    }
-
-    // VERY approximate
-    // This probably sucks
-    // 4 is made up also
-    public double getAngle() {
-        return atan(getDistanceFromVoltage(rightUltrasonic.getVoltage() - leftUltrasonic.getVoltage()) / 4);
     }
 
     // Returns inches

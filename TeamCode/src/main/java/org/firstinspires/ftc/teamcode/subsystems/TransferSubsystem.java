@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+import com.seattlesolvers.solverslib.hardware.SensorColor;
 import com.seattlesolvers.solverslib.hardware.ServoEx;
 import com.seattlesolvers.solverslib.hardware.motors.CRServoEx;
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
@@ -23,9 +24,9 @@ public class TransferSubsystem extends SubsystemBase {
         public double getValue() {
             switch (this) {
                 case OPEN:
-                    return 0.15;
+                    return 0.35;
                 case CLOSED:
-                    return 0.30;
+                    return 0.10;
                 default:
                     throw new IllegalArgumentException();
             }
@@ -35,15 +36,17 @@ public class TransferSubsystem extends SubsystemBase {
     public enum BeltState {
         INTAKE,
         REVERSE,
-        OUTTAKE,
         DISABLED,
+        HOLD,
         CUSTOM;
         public double getValue() {
             switch (this) {
                 case INTAKE:
-                    return -1.0;
-                case REVERSE:
                     return 1.0;
+                case REVERSE:
+                    return -1.0;
+                case HOLD:
+                    return 0.5;
                 case CUSTOM:
                 case DISABLED:
                     return 0;
@@ -56,14 +59,14 @@ public class TransferSubsystem extends SubsystemBase {
     public TransferSubsystem(HardwareMap hardwareMap) {
         servoRight = new CRServoEx(hardwareMap, HardwareMapNames.TRANSFER_SERVO_RIGHT);
         servoRight.set(0);
-        servoRight.setInverted(true);
 
         servoLeft = new CRServoEx(hardwareMap, HardwareMapNames.TRANSFER_SERVO_LEFT);
         servoLeft.set(0);
-        servoRight.setInverted(true);
+        servoLeft.setInverted(true);
 
         gateServo = new ServoEx(hardwareMap, HardwareMapNames.GATE_SERVO);
 
+        setGatePosition(GatePosition.OPEN);
         setGatePosition(GatePosition.CLOSED);
         setBeltState(BeltState.DISABLED);
     }

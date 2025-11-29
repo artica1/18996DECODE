@@ -19,10 +19,12 @@ public class ShooterSubsystem extends SubsystemBase {
     public static double kS = 0.1;
     public static double kV = 0.00041;
     public static double kP = 0.001;
-    private double idlePower = 0.4;
+    private final double idlePower = 0.2;
 
     private final ServoEx angleServo;
-    private double angle;
+
+    private double localAngle = 40;
+    private int localTargetTps = 1350;
 
     private int targetTps;
 
@@ -67,8 +69,8 @@ public class ShooterSubsystem extends SubsystemBase {
         }
     }
 
-    public void setTargetTps(int targetTps) {
-        this.targetTps = targetTps;
+    public void setTargetTps(double targetTps) {
+        this.targetTps = (int)targetTps;
     }
 
     public void setAngle(double angle) {
@@ -77,13 +79,12 @@ public class ShooterSubsystem extends SubsystemBase {
         } else if (angle > 45) {
             angleServo.set(45);
         } else {
-            this.angle = angle;
             angleServo.set(angle);
         }
     }
 
     public double getAngle() {
-        return angle;
+        return angleServo.get();
     }
 
     public int getTargetTps() {
@@ -104,5 +105,39 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public int getError() {
         return targetTps - getCurrentTps();
+    }
+
+    public static void setkP(double kP) {
+        ShooterSubsystem.kP = kP;
+    }
+
+    public void setLocal() {
+        setShooterMotorState(ShooterMotorState.ACTIVE);
+        targetTps = localTargetTps;
+        angleServo.set(localAngle);
+    }
+
+    public void setLocalTargetTps(int localTargetTps) {
+        this.localTargetTps = localTargetTps;
+        setLocal();
+    }
+
+    public void setLocalAngle(double localAngle) {
+        if (localAngle < 5) {
+            this.localAngle = 5;
+        } else if (localAngle > 45) {
+            this.localAngle = 45;
+        } else {
+            this.localAngle = localAngle;
+        }
+        setLocal();
+    }
+
+    public int getLocalTargetTps() {
+        return localTargetTps;
+    }
+
+    public double getLocalAngle() {
+        return localAngle;
     }
 }
