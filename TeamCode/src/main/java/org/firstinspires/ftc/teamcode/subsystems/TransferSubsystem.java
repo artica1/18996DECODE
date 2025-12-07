@@ -3,8 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
-import com.seattlesolvers.solverslib.hardware.SensorColor;
-import com.seattlesolvers.solverslib.hardware.ServoEx;
+import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 import com.seattlesolvers.solverslib.hardware.motors.CRServoEx;
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
 
@@ -26,7 +25,7 @@ public class TransferSubsystem extends SubsystemBase {
                 case OPEN:
                     return 0.35;
                 case CLOSED:
-                    return 0.10;
+                    return 0.08;
                 default:
                     throw new IllegalArgumentException();
             }

@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.automations.ColorSensorManager;
 import org.firstinspires.ftc.teamcode.automations.drive.Drive;
 import org.firstinspires.ftc.teamcode.automations.odo.STATICLocalizer;
 import org.firstinspires.ftc.teamcode.automations.pedroPathing.Constants;
@@ -17,6 +18,7 @@ public class Robot {
     public STATICLocalizer localizer;
     public Drive drive;
     public HardwareMap hardwareMap;
+    public ColorSensorManager colorSensorManager;
 
     public enum Team {
         RED,
@@ -34,6 +36,8 @@ public class Robot {
     public Robot(HardwareMap hardwareMap, Team team, Subsystems... subsystems) {
         this.hardwareMap = hardwareMap;
         GlobalDataStorage.team = team;
+
+        colorSensorManager = new ColorSensorManager(hardwareMap);
 
         if (team == Team.RED) {
             GlobalDataStorage.goalPose = new Pose(144, 144);
@@ -63,5 +67,12 @@ public class Robot {
 
     public Robot(HardwareMap hardwareMap, Team team) {
         this(hardwareMap, team, Robot.Subsystems.INTAKE, Subsystems.TRANSFER, Subsystems.SHOOTER, Subsystems.LOCALIZER, Subsystems.DRIVE);
+    }
+
+    public void update() {
+        localizer.update();
+        drive.update();
+
+        shooter.updateDistanceToGoal(localizer.getDistanceToGoal());
     }
 }

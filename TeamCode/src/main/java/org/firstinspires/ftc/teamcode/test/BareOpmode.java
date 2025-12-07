@@ -2,11 +2,10 @@ package org.firstinspires.ftc.teamcode.test;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.seattlesolvers.solverslib.hardware.motors.Motor;
-import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
-import com.seattlesolvers.solverslib.util.InterpLUT;
 
-import org.firstinspires.ftc.teamcode.HardwareMapNames;
+import org.firstinspires.ftc.teamcode.automations.ColorSensorManager;
+
+import java.util.Arrays;
 
 @TeleOp
 public class BareOpmode extends LinearOpMode {
@@ -14,16 +13,18 @@ public class BareOpmode extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        InterpLUT lut = new InterpLUT();
-
-        lut.add(30, 30);
-        lut.add(100, 45);
-        lut.createLUT();
+        ColorSensorManager colorSensorManager = new ColorSensorManager(hardwareMap);
 
         waitForStart();
 
         while (opModeIsActive()) {
-            telemetry.addData("Output", lut.get(50));
+            telemetry.addData("Upper Distance", colorSensorManager.getUpperDistance());
+            telemetry.addData("Middle Distance", colorSensorManager.getMiddleDistance());
+
+            telemetry.addData("Upper Color", Arrays.toString(colorSensorManager.getUpperColor()));
+            telemetry.addData("Middle Distance", Arrays.toString(colorSensorManager.getMiddleColor()));
+
+            telemetry.addData("Ball Detected", colorSensorManager.ballDetected());
             telemetry.update();
         }
     }

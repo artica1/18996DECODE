@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.HardwareMapNames;
 @Configurable
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(9)
+            .mass(10)
             .forwardZeroPowerAcceleration(-28.146)
             .lateralZeroPowerAcceleration(-57.86)
             .translationalPIDFCoefficients(new PIDFCoefficients(

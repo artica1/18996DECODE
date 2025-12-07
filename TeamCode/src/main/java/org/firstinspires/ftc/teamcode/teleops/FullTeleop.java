@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
 import static java.lang.Math.PI;
-import static java.lang.Math.atan2;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
@@ -10,19 +9,19 @@ import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 import org.firstinspires.ftc.teamcode.GlobalDataStorage;
 import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.automations.ShooterCalculations;
 import org.firstinspires.ftc.teamcode.automations.commands.AutoShootCommand;
-import org.firstinspires.ftc.teamcode.automations.commands.AdjustShooterCommand;
+import org.firstinspires.ftc.teamcode.automations.commands.AdjustShooterSpeedCommand;
+import org.firstinspires.ftc.teamcode.automations.commands.HoldPointCommand;
 import org.firstinspires.ftc.teamcode.automations.drive.Drive;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.ShooterSubsystem;
@@ -37,8 +36,10 @@ public class FullTeleop extends CommandOpMode {
 
     private GamepadEx gamepad;
 
-    CommandBase autoShootCommand;
-    CommandBase liveAdjustShooterCommand;
+    // Commands are single instanced for teleop
+    private Command autoShootCommand = new InstantCommand();
+    private Command adjustShooterSpeedCommand = new InstantCommand();
+    private Command holdPointCommand = new InstantCommand();
 
     @IgnoreConfigurable
     private static TelemetryManager panelsTelemetry;
@@ -62,45 +63,29 @@ public class FullTeleop extends CommandOpMode {
     public void initialize() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
-        robot = new Robot(hardwareMap, Robot.Team.BLUE);
-        robot.drive.follower.setStartingPose(GlobalDataStorage.robotPose);
-        //robot.localizer.setStartPose(new Pose(48, 72, PI/2));
+        robot = new Robot(hardwareMap, Robot.Team.RED);
+        //robot.drive.follower.setStartingPose(GlobalDataStorage.robotPose);
+        robot.localizer.setStartPose(new Pose(72, 72, PI/2));
 
         gamepad = new GamepadEx(gamepad1);
-
-        autoShootCommand = new InstantCommand();
-        liveAdjustShooterCommand = new InstantCommand();
 
         // AUTO SHOOT SYSTEM (Left Back Paddle)
         gamepad.getGamepadButton(GamepadKeys.Button.CIRCLE)
                 .whenPressed(() -> {
-                    robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
-                    robot.transfer.setBeltState(TransferSubsystem.BeltState.HOLD);
-
-                    liveAdjustShooterCommand = new AdjustShooterCommand(robot);
-                    schedule(liveAdjustShooterCommand.perpetually());
+                    robot.shooter.setTargetTps(1300);
+                    robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.ACTIVE);
                 })
                 .whenReleased(() -> {
-                    liveAdjustShooterCommand.end(true);
-                    autoShootCommand = new AutoShootCommand(robot, 3);
+                    autoShootCommand = new AutoShootCommand(robot);
                     schedule(autoShootCommand);
                 });
 
         // HOLD AIM (Right Back Paddle)
         gamepad.getGamepadButton(GamepadKeys.Button.CROSS)
                 .whenPressed(() -> {
-                    robot.drive.setHoldPoint(
-                            robot.localizer.getPose().setHeading(
-                                    atan2(
-                                            GlobalDataStorage.goalPose.minus(robot.localizer.getPose()).getY(),
-                                            GlobalDataStorage.goalPose.minus(robot.localizer.getPose()).getX()
-                                    )
-                            )
-                    );
-                    robot.drive.setDriveMode(Drive.DriveMode.HOLD_POINT);
-                }
-                )
-                .whenReleased(() -> robot.drive.setDriveMode(Drive.DriveMode.MANUAL));
+                    holdPointCommand = new HoldPointCommand(robot);
+                    schedule(holdPointCommand);
+                }).whenReleased(() -> holdPointCommand.end(false));
 
         // GATE CONTROL
         gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
@@ -127,14 +112,18 @@ public class FullTeleop extends CommandOpMode {
         // IDLE/RESET
         gamepad.getGamepadButton(GamepadKeys.Button.SQUARE)
                 .whenPressed(() -> {
+                    autoShootCommand.cancel();
+                    holdPointCommand.cancel();
+                    adjustShooterSpeedCommand.cancel();
+
                     robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.IDLE);
                     robot.drive.setDriveMode(Drive.DriveMode.MANUAL);
-                    autoShootCommand.end(true);
+                    robot.shooter.setShooterAngleState(ShooterSubsystem.ShooterAngleState.AUTO);
                 });
 
         // AUTO SET SPEED AND ANGLE
         gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
-                .whenPressed(new AdjustShooterCommand(robot));
+                .whenPressed(new AdjustShooterSpeedCommand(robot));
 
         // SET INSTANCED
         gamepad.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
@@ -156,14 +145,14 @@ public class FullTeleop extends CommandOpMode {
 
     @Override
     public void run() {
+        robot.update();
         CommandScheduler.getInstance().run();
-        robot.localizer.update();
-        robot.drive.update();
 
         robot.drive.setTeleOpVectors(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 
+        // todo make square
         if (!gamepad1.left_bumper && autoShootCommand.isFinished()) {
-            double triggerValue = Math.pow(gamepad1.right_trigger - gamepad1.left_trigger, 0.2);
+            double triggerValue = gamepad1.right_trigger - gamepad1.left_trigger;
             robot.transfer.setCustomBeltSpeed(triggerValue);
             robot.intake.setCustomIntakeSpeed(triggerValue);
         }
@@ -180,6 +169,8 @@ public class FullTeleop extends CommandOpMode {
         panelsTelemetry.addData("Pose", robot.localizer.getPose());
 
         panelsTelemetry.addData("GLOBAL POSE", GlobalDataStorage.goalPose);
+
+        panelsTelemetry.addData("Ball detected", robot.colorSensorManager.ballDetected());
 
         panelsTelemetry.update(telemetry);
 

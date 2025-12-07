@@ -8,10 +8,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 
-import org.firstinspires.ftc.teamcode.GlobalDataStorage;
 import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.automations.commands.AdjustShooterCommand;
+import org.firstinspires.ftc.teamcode.automations.commands.AdjustShooterSpeedCommand;
 import org.firstinspires.ftc.teamcode.automations.commands.AutoShootCommand;
+import org.firstinspires.ftc.teamcode.automations.commands.HoldPointCommand;
 import org.firstinspires.ftc.teamcode.automations.drive.Drive;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
@@ -24,15 +24,16 @@ public class TestAuto extends OpMode {
     private Timer pathTimer, opmodeTimer;
     private int pathState;
 
-    private final Pose startPose = new Pose(48, 120, Math.toRadians(90));
+    private final Pose startPose = new Pose(119, 130, Math.toRadians(-45)).mirror();
     private final Pose shootPreloadPose = new Pose(48, 96, Math.toRadians(135));
     private final Pose shootStaged1Pose = new Pose(48, 96, Math.toRadians(135));
     private final Pose shootStaged2Pose = new Pose(48, 96, Math.toRadians(135));
 
     public PathChain shootPreload, intakeStaged1, shootStaged1, intakeStaged2, shootStaged2;
 
-    public AutoShootCommand autoShootCommand;
-    public AdjustShooterCommand adjustShooterCommand;
+    private AutoShootCommand autoShootCommand;
+    private AdjustShooterSpeedCommand adjustShooterCommand;
+    private HoldPointCommand holdPointCommand;
 
     @Override
     public void init() {
@@ -76,14 +77,14 @@ public class TestAuto extends OpMode {
                 robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
                 robot.transfer.setBeltState(TransferSubsystem.BeltState.HOLD);
 
-                adjustShooterCommand = new AdjustShooterCommand(robot);
+                adjustShooterCommand = new AdjustShooterSpeedCommand(robot);
                 CommandScheduler.getInstance().schedule(adjustShooterCommand.perpetually());
 
                 setPathState(1);
                 break;
             case 1:
                 if(!robot.drive.follower.isBusy()) {
-                    autoShootCommand = new AutoShootCommand(robot, 3);
+                    autoShootCommand = new AutoShootCommand(robot);
                     CommandScheduler.getInstance().schedule(autoShootCommand);
                     setPathState(2);
                 }
@@ -100,7 +101,6 @@ public class TestAuto extends OpMode {
                 break;
             case 3:
                 if (!robot.drive.follower.isBusy()) {
-                    robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
                     robot.transfer.setBeltState(TransferSubsystem.BeltState.HOLD);
 
                     robot.drive.follower.followPath(shootStaged1);
@@ -109,7 +109,7 @@ public class TestAuto extends OpMode {
                 break;
             case 4:
                 if(!robot.drive.follower.isBusy()) {
-                    autoShootCommand = new AutoShootCommand(robot, 3);
+                    autoShootCommand = new AutoShootCommand(robot);
                     CommandScheduler.getInstance().schedule(autoShootCommand);
                     setPathState(5);
                 }
@@ -126,7 +126,6 @@ public class TestAuto extends OpMode {
                 break;
             case 6:
                 if (!robot.drive.follower.isBusy()) {
-                    robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
                     robot.transfer.setBeltState(TransferSubsystem.BeltState.HOLD);
 
                     robot.drive.follower.followPath(shootStaged2);
@@ -135,7 +134,7 @@ public class TestAuto extends OpMode {
                 break;
             case 7:
                 if(!robot.drive.follower.isBusy()) {
-                    autoShootCommand = new AutoShootCommand(robot, 3);
+                    autoShootCommand = new AutoShootCommand(robot);
                     CommandScheduler.getInstance().schedule(autoShootCommand);
                     setPathState(-1);
                 }
@@ -152,7 +151,6 @@ public class TestAuto extends OpMode {
                                 shootPreloadPose
                         )
                 ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(135))
-                .setBrakingStart(0.5)
                 .build();
 
         intakeStaged1 = robot.drive.follower.pathBuilder().addPath(
@@ -163,7 +161,6 @@ public class TestAuto extends OpMode {
                                 new Pose(18.882, 84.171)
                         )
                 ).setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
-                .setBrakingStart(2)
                 .build();
 
         shootStaged1 = robot.drive.follower.pathBuilder().addPath(

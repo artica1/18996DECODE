@@ -22,8 +22,8 @@ dependencies {
 
     implementation 'com.bylazar:fullpanels:1.0.10'
 
-    // DO NOT UPDATE TO 0.3.3 OR BEYOND - they deprecated all the servo interfaces so the code will be fried
-    implementation "org.solverslib:core:0.3.2"
+    // todo update the servo stuff
+    implementation "org.solverslib:core:0.3.3"
 
     implementation "dev.frozenmilk.sinister:Sloth:0.2.4"
 

@@ -46,6 +46,7 @@ public class IntakeSubsystem extends SubsystemBase {
         intakeMotor = new MotorEx(hardwareMap, HardwareMapNames.INTAKE_MOTOR, Motor.GoBILDA.RPM_1150);
         intakeMotor.setRunMode(Motor.RunMode.RawPower);
         intakeMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        intakeMotor.setInverted(true);
         intakeMotor.set(0);
 
         setIntakeState(IntakeState.DISABLED);

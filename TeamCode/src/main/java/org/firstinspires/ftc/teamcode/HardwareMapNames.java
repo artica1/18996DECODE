@@ -26,6 +26,6 @@ public class HardwareMapNames {
     public static String LEFT_ULTRASONIC = "leftUltrasonic";
     public static String RIGHT_ULTRASONIC = "rightUltrasonic";
 
-    public static String UPPER_COLOR = "";
-    public static String MIDDLE_COLOR = "";
+    public static String UPPER_COLOR_SENSOR = "upperColorSensor";
+    public static String MIDDLE_COLOR_SENSOR = "middleColorSensor";
 }

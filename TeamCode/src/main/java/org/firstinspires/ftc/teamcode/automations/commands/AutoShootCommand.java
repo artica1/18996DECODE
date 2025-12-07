@@ -1,53 +1,38 @@
 package org.firstinspires.ftc.teamcode.automations.commands;
 
-import static java.lang.Math.atan2;
-
 import com.pedropathing.util.Timer;
 import com.seattlesolvers.solverslib.command.CommandBase;
-import com.seattlesolvers.solverslib.command.CommandScheduler;
 
-import org.firstinspires.ftc.teamcode.GlobalDataStorage;
 import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.automations.ShooterCalculations;
-import org.firstinspires.ftc.teamcode.automations.drive.Drive;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 
 public class AutoShootCommand extends CommandBase {
     private final Robot robot;
-    private Drive.DriveMode previousDriveMode;
 
+    private TransferSubsystem.BeltState previousBeltState;
+    private IntakeSubsystem.IntakeState previousIntakeState;
+
+    private Timer totalTime;
+    private Timer noBallDetectedTime;
     private Timer shotTimer;
     private int shootingState;
-    private final int numberOfArtifacts;
-    private int totalArtifactsShot = 0;
     private int previousError = 0;
 
-    public AutoShootCommand(Robot robot, int artifacts) {
+    public AutoShootCommand(Robot robot) {
         this.robot = robot;
-        this.numberOfArtifacts = artifacts;
     }
 
     @Override
     public void initialize() {
+        totalTime = new Timer();
+        noBallDetectedTime = new Timer();
         shotTimer = new Timer();
 
-        previousDriveMode = robot.drive.getDriveMode();
+        previousBeltState = robot.transfer.getBeltState();
 
-        robot.shooter.setTargetTps(ShooterCalculations.getSpeed(robot.localizer.getDistanceToGoal()));
-        robot.shooter.setAngle(ShooterCalculations.getAngle(robot.localizer.getDistanceToGoal()));
-        robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.ACTIVE);
-
-        robot.drive.setHoldPoint(
-                robot.localizer.getPose().setHeading(
-                        atan2(
-                                GlobalDataStorage.goalPose.minus(robot.localizer.getPose()).getY(),
-                                GlobalDataStorage.goalPose.minus(robot.localizer.getPose()).getX()
-                        )
-                )
-        );
-        robot.drive.setDriveMode(Drive.DriveMode.HOLD_POINT);
+        previousIntakeState = robot.intake.getIntakeState();
 
         robot.transfer.setBeltState(TransferSubsystem.BeltState.INTAKE);
 
@@ -56,20 +41,27 @@ public class AutoShootCommand extends CommandBase {
 
     @Override
     public void execute() {
+        if (robot.colorSensorManager.ballDetected()) noBallDetectedTime.resetTimer();
+
         switch(shootingState) {
             case 0:
-                if(Math.abs(robot.shooter.getError()) < 30) {
+                if (Math.abs(robot.shooter.getError()) < 30) {
+                    ShooterSubsystem.setkP(0.005);
+
                     robot.transfer.setGatePosition(TransferSubsystem.GatePosition.OPEN);
                     robot.intake.setIntakeState(IntakeSubsystem.IntakeState.OUTTAKE);
-                    ShooterSubsystem.setkP(0.005);
 
                     setShootingState(1);
                 }
+                shotTimer.resetTimer();
                 break;
             case 1:
-                if(Math.abs(robot.shooter.getError()) > 100 && previousError < 100) {
+                if (Math.abs(robot.shooter.getError()) > 100 && previousError < 100) {
                     shotTimer.resetTimer();
-                    totalArtifactsShot++;
+
+                    robot.transfer.setGatePosition(TransferSubsystem.GatePosition.CLOSED);
+
+                    setShootingState(0);
                 }
                 break;
         }
@@ -84,20 +76,16 @@ public class AutoShootCommand extends CommandBase {
 
         ShooterSubsystem.setkP(0.001);
 
-        robot.drive.setDriveMode(previousDriveMode);
-
-        if (!interrupted && totalArtifactsShot == numberOfArtifacts) {
-            robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.IDLE);
-        }
+        robot.intake.setIntakeState(previousIntakeState);
+        robot.transfer.setBeltState(previousBeltState);
     }
 
     @Override
     public boolean isFinished() {
-        return (totalArtifactsShot == numberOfArtifacts || shotTimer.getElapsedTime() > 2000);
+        return noBallDetectedTime.getElapsedTime() > 500 || shotTimer.getElapsedTime() > 2000 || totalTime.getElapsedTime() > 5000;
     }
 
     public void setShootingState(int shootingState) {
         this.shootingState = shootingState;
-        shotTimer.resetTimer();
     }
 }

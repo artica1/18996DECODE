@@ -19,6 +19,10 @@ public class ShooterCalculations {
         // IDFK WHY
         // otherwise it literally crashes the entire robot with no error message so dont do it
 
+        // bruh
+        angleILUT.add(-500, 5);
+        speedILUT.add(-500, 1100);
+
         angleILUT.add(20, 5);
         speedILUT.add(20, 1100);
 
@@ -37,9 +41,12 @@ public class ShooterCalculations {
         angleILUT.add(100, 45);
         speedILUT.add(100, 1460);
 
+        angleILUT.add(140, 45);
+        speedILUT.add(140, 1650);
 
+        // bruh
         angleILUT.add(500, 45);
-        speedILUT.add(500, 2000);
+        speedILUT.add(500, 1700);
 
 
         speedILUT.createLUT();

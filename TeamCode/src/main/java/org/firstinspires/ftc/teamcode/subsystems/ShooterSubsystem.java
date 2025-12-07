@@ -1,25 +1,29 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
-import com.seattlesolvers.solverslib.hardware.ServoEx;
+import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
+import org.firstinspires.ftc.teamcode.automations.ShooterCalculations;
 
 @Configurable
 public class ShooterSubsystem extends SubsystemBase {
     private final MotorEx flywheelMotor;
     private ShooterMotorState shooterMotorState;
+    private ShooterAngleState shooterAngleState;
+
+    private double distanceToGoal = 0; // cant be zero idfk why
+
     public static double kS = 0.1;
-    public static double kV = 0.00041;
-    public static double kP = 0.001;
-    private final double idlePower = 0.2;
+    public static double kV = 0.00039;
+    public static double kP = 0.003;
+    private final double idlePower = 0.3;
 
     private final ServoEx angleServo;
 
@@ -34,6 +38,11 @@ public class ShooterSubsystem extends SubsystemBase {
         UNPOWERED
     }
 
+    public enum ShooterAngleState {
+        AUTO,
+        MANUAL
+    }
+
     public ShooterSubsystem(HardwareMap hardwareMap) {
         flywheelMotor = new MotorEx(hardwareMap, HardwareMapNames.SHOOTER_MOTOR, Motor.GoBILDA.BARE);
         flywheelMotor.setRunMode(Motor.RunMode.RawPower);
@@ -44,6 +53,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
         angleServo = new ServoEx(hardwareMap, HardwareMapNames.SHOOTER_SERVO, 365, AngleUnit.DEGREES); // THE SERVO IS NOW IN DEGREES 100%, set() TAKES DEGREES
         setAngle(5);
+        setShooterAngleState(ShooterAngleState.AUTO);
     }
 
     @Override
@@ -67,6 +77,14 @@ public class ShooterSubsystem extends SubsystemBase {
         else if (shooterMotorState == ShooterMotorState.UNPOWERED) {
             flywheelMotor.set(0);
         }
+
+        if (shooterAngleState == ShooterAngleState.AUTO) {
+            setAngle(ShooterCalculations.getAngle(distanceToGoal));
+        }
+    }
+
+    public void updateDistanceToGoal(double distanceToGoal) {
+        this.distanceToGoal = distanceToGoal;
     }
 
     public void setTargetTps(double targetTps) {
@@ -103,6 +121,14 @@ public class ShooterSubsystem extends SubsystemBase {
         this.shooterMotorState = shooterMotorState;
     }
 
+    public ShooterAngleState getShooterAngleState() {
+        return shooterAngleState;
+    }
+
+    public void setShooterAngleState(ShooterAngleState shooterAngleState) {
+        this.shooterAngleState = shooterAngleState;
+    }
+
     public int getError() {
         return targetTps - getCurrentTps();
     }
@@ -113,6 +139,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public void setLocal() {
         setShooterMotorState(ShooterMotorState.ACTIVE);
+        setShooterAngleState(ShooterAngleState.MANUAL);
         targetTps = localTargetTps;
         angleServo.set(localAngle);
     }

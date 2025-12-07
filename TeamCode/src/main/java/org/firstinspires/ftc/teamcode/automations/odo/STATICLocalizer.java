@@ -119,17 +119,20 @@ public class STATICLocalizer implements Localizer {
         return pinpoint.isNAN();
     }
 
-    // todo sanity check cuz ultrasonics might be tweaking
     public double getDistanceToGoal() {
-        Pose currentPose = getPose();
-        if (currentPose.distanceFrom(GlobalDataStorage.goalPose) > 60
-                || Math.acos(currentPose.getHeadingAsUnitVector().dot(GlobalDataStorage.goalPose.getHeadingAsUnitVector())) > Math.toRadians(10)
-                || currentPose.distanceFrom(GlobalDataStorage.goalPose) - ultrasonicsManager.getDistance() > 5
+        return getDistanceToGoal(getPose());
+    }
+
+    // todo sanity check cuz ultrasonics might be tweaking
+    public double getDistanceToGoal(Pose pose) {
+        if (pose.distanceFrom(GlobalDataStorage.goalPose) > 60
+                || Math.acos(pose.getHeadingAsUnitVector().dot(GlobalDataStorage.goalPose.getHeadingAsUnitVector())) > Math.toRadians(10)
+                || pose.distanceFrom(GlobalDataStorage.goalPose) - ultrasonicsManager.getDistance() > 5
                 || localizerMode == LocalizerMode.NO_ULTRASONICS
                 || localizerMode == LocalizerMode.PINPOINT_ONLY
                 || Double.isNaN(ultrasonicsManager.getDistance()))
         {
-            return currentPose.distanceFrom(GlobalDataStorage.goalPose);
+            return pose.distanceFrom(GlobalDataStorage.goalPose);
         } else {
             return ultrasonicsManager.getDistance();
         }
