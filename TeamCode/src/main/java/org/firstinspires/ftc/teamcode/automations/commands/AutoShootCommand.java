@@ -5,7 +5,6 @@ import com.seattlesolvers.solverslib.command.CommandBase;
 
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
-import org.firstinspires.ftc.teamcode.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 
 public class AutoShootCommand extends CommandBase {
@@ -17,11 +16,19 @@ public class AutoShootCommand extends CommandBase {
     private Timer totalTime;
     private Timer noBallDetectedTime;
     private Timer shotTimer;
+    private Timer chargeTimer;
     private int shootingState;
-    private int previousError = 0;
+    private double previousError = 0;
+
+    private final boolean continuous;
 
     public AutoShootCommand(Robot robot) {
+        this(robot, false);
+    }
+
+    public AutoShootCommand(Robot robot, boolean continuous) {
         this.robot = robot;
+        this.continuous = continuous;
     }
 
     @Override
@@ -29,6 +36,7 @@ public class AutoShootCommand extends CommandBase {
         totalTime = new Timer();
         noBallDetectedTime = new Timer();
         shotTimer = new Timer();
+        chargeTimer = new Timer();
 
         previousBeltState = robot.transfer.getBeltState();
 
@@ -45,19 +53,21 @@ public class AutoShootCommand extends CommandBase {
 
         switch(shootingState) {
             case 0:
-                if (Math.abs(robot.shooter.getError()) < 30) {
-                    ShooterSubsystem.setkP(0.005);
-
+                if (Math.abs(robot.shooter.getError()) < 30 && robot.drive.follower.getHeadingError() < 0.03) {
                     robot.transfer.setGatePosition(TransferSubsystem.GatePosition.OPEN);
                     robot.intake.setIntakeState(IntakeSubsystem.IntakeState.OUTTAKE);
 
-                    setShootingState(1);
+                    if (!continuous) {
+                        setShootingState(1);
+                    } else {
+                        setShootingState(-1);
+                    }
                 }
-                shotTimer.resetTimer();
                 break;
             case 1:
                 if (Math.abs(robot.shooter.getError()) > 100 && previousError < 100) {
                     shotTimer.resetTimer();
+                    chargeTimer.resetTimer();
 
                     robot.transfer.setGatePosition(TransferSubsystem.GatePosition.CLOSED);
 
@@ -74,15 +84,13 @@ public class AutoShootCommand extends CommandBase {
         robot.intake.setIntakeState(IntakeSubsystem.IntakeState.DISABLED);
         robot.transfer.setBeltState(TransferSubsystem.BeltState.DISABLED);
 
-        ShooterSubsystem.setkP(0.001);
-
         robot.intake.setIntakeState(previousIntakeState);
         robot.transfer.setBeltState(previousBeltState);
     }
 
     @Override
     public boolean isFinished() {
-        return noBallDetectedTime.getElapsedTime() > 500 || shotTimer.getElapsedTime() > 2000 || totalTime.getElapsedTime() > 5000;
+        return noBallDetectedTime.getElapsedTime() > 500 || shotTimer.getElapsedTime() > 5000 || totalTime.getElapsedTime() > 8000;
     }
 
     public void setShootingState(int shootingState) {

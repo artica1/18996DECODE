@@ -36,6 +36,8 @@ public class FullTeleop extends CommandOpMode {
 
     private GamepadEx gamepad;
 
+    private double previousVelocityError = 0;
+
     // Commands are single instanced for teleop
     private Command autoShootCommand = new InstantCommand();
     private Command adjustShooterSpeedCommand = new InstantCommand();
@@ -63,16 +65,18 @@ public class FullTeleop extends CommandOpMode {
     public void initialize() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
-        robot = new Robot(hardwareMap, Robot.Team.RED);
-        //robot.drive.follower.setStartingPose(GlobalDataStorage.robotPose);
-        robot.localizer.setStartPose(new Pose(72, 72, PI/2));
+        robot = new Robot(hardwareMap, GlobalDataStorage.autoTeam);
+        robot.localizer.setStartPose(GlobalDataStorage.robotPose.copy());
+
+        telemetry.addData("Global Pose", GlobalDataStorage.robotPose);
+        telemetry.update();
 
         gamepad = new GamepadEx(gamepad1);
 
-        // AUTO SHOOT SYSTEM (Left Back Paddle)
-        gamepad.getGamepadButton(GamepadKeys.Button.CIRCLE)
+        // AUTO SHOOT SYSTEM
+        gamepad.getGamepadButton(GamepadKeys.Button.SQUARE)
                 .whenPressed(() -> {
-                    robot.shooter.setTargetTps(1300);
+                    robot.shooter.setTargetTps(1400);
                     robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.ACTIVE);
                 })
                 .whenReleased(() -> {
@@ -84,18 +88,18 @@ public class FullTeleop extends CommandOpMode {
         gamepad.getGamepadButton(GamepadKeys.Button.CROSS)
                 .whenPressed(() -> {
                     holdPointCommand = new HoldPointCommand(robot);
+                    adjustShooterSpeedCommand = new AdjustShooterSpeedCommand(robot, robot.localizer.getPose());
                     schedule(holdPointCommand);
+                    schedule(adjustShooterSpeedCommand);
                 }).whenReleased(() -> holdPointCommand.end(false));
 
         // GATE CONTROL
         gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
                 .whenPressed(() -> {
                     robot.transfer.setGatePosition(TransferSubsystem.GatePosition.OPEN);
-                    ShooterSubsystem.setkP(0.005);
                 })
                 .whenReleased(() -> {
                     robot.transfer.setGatePosition(TransferSubsystem.GatePosition.CLOSED);
-                    ShooterSubsystem.setkP(0.001);
                 });
 
         // INTAKE/BELTS OUTTAKE MODE
@@ -110,7 +114,7 @@ public class FullTeleop extends CommandOpMode {
                 });
 
         // IDLE/RESET
-        gamepad.getGamepadButton(GamepadKeys.Button.SQUARE)
+        gamepad.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
                 .whenPressed(() -> {
                     autoShootCommand.cancel();
                     holdPointCommand.cancel();
@@ -121,13 +125,30 @@ public class FullTeleop extends CommandOpMode {
                     robot.shooter.setShooterAngleState(ShooterSubsystem.ShooterAngleState.AUTO);
                 });
 
-        // AUTO SET SPEED AND ANGLE
-        gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
-                .whenPressed(new AdjustShooterSpeedCommand(robot));
+        // SET SPEED AND ANGLE, CLOSE LAUNCH ZONE (Left Back Paddle)
+        gamepad.getGamepadButton(GamepadKeys.Button.CIRCLE)
+                .whenPressed(() -> {
+                    robot.shooter.setTargetTps(1200);
+                    robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.ACTIVE);
+                });
 
+        // SET SPEED AND ANGLE, FAR LAUNCH ZONE
+        gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
+                .whenPressed(() -> {
+                    robot.shooter.setTargetTps(1450);
+                    robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.ACTIVE);
+                });
+
+        // FINE DRIVE ENABLE
+        gamepad.getGamepadButton(GamepadKeys.Button.TRIANGLE)
+                .whenPressed(() -> robot.drive.setDriveMode(Drive.DriveMode.FINE));
+
+        /*
         // SET INSTANCED
         gamepad.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
                 .whenPressed(() -> robot.shooter.setLocal());
+
+         */
 
         // EDIT INSTANCED
         gamepad.getGamepadButton(GamepadKeys.Button.DPAD_UP)
@@ -150,11 +171,20 @@ public class FullTeleop extends CommandOpMode {
 
         robot.drive.setTeleOpVectors(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 
-        // todo make square
-        if (!gamepad1.left_bumper && autoShootCommand.isFinished()) {
+        if (!gamepad1.left_bumper && autoShootCommand.isFinished() ) {
             double triggerValue = gamepad1.right_trigger - gamepad1.left_trigger;
-            robot.transfer.setCustomBeltSpeed(triggerValue);
-            robot.intake.setCustomIntakeSpeed(triggerValue);
+
+            if (triggerValue != 0) {
+                robot.transfer.setCustomBeltSpeed(triggerValue);
+                robot.intake.setCustomIntakeSpeed(triggerValue);
+            } else {
+                robot.transfer.setCustomBeltSpeed(0.0);
+                robot.intake.setCustomIntakeSpeed(0.2);
+            }
+        }
+
+        if (Math.abs(robot.shooter.getError()) < 30 && previousVelocityError > 30) {
+            gamepad1.rumble(100);
         }
 
         panelsTelemetry.addData("Current Tps", robot.shooter.getCurrentTps());
@@ -168,7 +198,7 @@ public class FullTeleop extends CommandOpMode {
 
         panelsTelemetry.addData("Pose", robot.localizer.getPose());
 
-        panelsTelemetry.addData("GLOBAL POSE", GlobalDataStorage.goalPose);
+        panelsTelemetry.addData("Goal Pose", GlobalDataStorage.goalPose);
 
         panelsTelemetry.addData("Ball detected", robot.colorSensorManager.ballDetected());
 

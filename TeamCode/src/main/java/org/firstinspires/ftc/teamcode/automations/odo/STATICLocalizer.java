@@ -79,8 +79,6 @@ public class STATICLocalizer implements Localizer {
         if (localizerMode == LocalizerMode.All || localizerMode == LocalizerMode.NO_ULTRASONICS) {
            // setPose(limelightManager.getPose(getIMUHeading()));
         }
-
-        GlobalDataStorage.robotPose = getPose();
     }
 
     @Override

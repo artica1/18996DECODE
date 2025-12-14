@@ -20,34 +20,53 @@ public class ShooterCalculations {
         // otherwise it literally crashes the entire robot with no error message so dont do it
 
         // bruh
-        angleILUT.add(-500, 5);
-        speedILUT.add(-500, 1100);
+        angleILUT.add(-500, 10);
+        speedILUT.add(-500, 950);
 
-        angleILUT.add(20, 5);
-        speedILUT.add(20, 1100);
+        // good ones
+        angleILUT.add(20, 10);
+        speedILUT.add(20, 950);
 
-        angleILUT.add(40, 10);
-        speedILUT.add(40, 1100);
+        angleILUT.add(30, 20);
+        speedILUT.add(30, 1000);
+
+        angleILUT.add(40, 35);
+        speedILUT.add(40, 1050);
+
+        angleILUT.add(50, 35);
+        speedILUT.add(50, 1050);
 
         angleILUT.add(60, 40);
-        speedILUT.add(60, 1180);
+        speedILUT.add(60, 1150);
 
         angleILUT.add(70, 40);
-        speedILUT.add(70, 1260);
+        speedILUT.add(70, 1150);
 
-        angleILUT.add(75, 40);
-        speedILUT.add(75, 1300);
+        angleILUT.add(80, 40);
+        speedILUT.add(80, 1200);
+
+        angleILUT.add(90, 40);
+        speedILUT.add(90, 1250);
 
         angleILUT.add(100, 45);
-        speedILUT.add(100, 1460);
+        speedILUT.add(100, 1250);
+
+        angleILUT.add(110, 45);
+        speedILUT.add(110, 1350);
+
+        angleILUT.add(120, 45);
+        speedILUT.add(120, 1450);
+
+        angleILUT.add(130, 45);
+        speedILUT.add(130, 1450);
 
         angleILUT.add(140, 45);
-        speedILUT.add(140, 1650);
+        speedILUT.add(140, 1450);
+        // end of good
 
         // bruh
         angleILUT.add(500, 45);
-        speedILUT.add(500, 1700);
-
+        speedILUT.add(500, 1450);
 
         speedILUT.createLUT();
         angleILUT.createLUT();

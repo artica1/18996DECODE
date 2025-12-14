@@ -4,6 +4,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+import com.seattlesolvers.solverslib.hardware.motors.MotorGroup;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
@@ -12,25 +13,28 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
 import org.firstinspires.ftc.teamcode.automations.ShooterCalculations;
 
+import java.util.List;
+
 @Configurable
 public class ShooterSubsystem extends SubsystemBase {
-    private final MotorEx flywheelMotor;
+    private MotorEx shooter1;
+    private MotorEx shooter2;
     private ShooterMotorState shooterMotorState;
     private ShooterAngleState shooterAngleState;
 
     private double distanceToGoal = 0; // cant be zero idfk why
 
-    public static double kS = 0.1;
-    public static double kV = 0.00039;
-    public static double kP = 0.003;
-    private final double idlePower = 0.3;
+    public static double kS = 0.15;
+    public static double kV = 0.00044;
+    public static double kP = 0.005;
+    private final double idlePower = 0.4;
 
     private final ServoEx angleServo;
 
     private double localAngle = 40;
-    private int localTargetTps = 1350;
+    private double localTargetTps = 1250;
 
-    private int targetTps;
+    private double targetTps;
 
     public enum ShooterMotorState {
         ACTIVE,
@@ -44,10 +48,16 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public ShooterSubsystem(HardwareMap hardwareMap) {
-        flywheelMotor = new MotorEx(hardwareMap, HardwareMapNames.SHOOTER_MOTOR, Motor.GoBILDA.BARE);
-        flywheelMotor.setRunMode(Motor.RunMode.RawPower);
-        flywheelMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-        flywheelMotor.setInverted(true);
+        shooter1 = new MotorEx(hardwareMap, HardwareMapNames.SHOOTER_MOTOR_1, Motor.GoBILDA.BARE);
+        shooter2 = new MotorEx(hardwareMap, HardwareMapNames.SHOOTER_MOTOR_2, Motor.GoBILDA.BARE);
+
+        shooter1.setRunMode(Motor.RunMode.RawPower);
+        shooter1.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+
+        shooter2.setRunMode(Motor.RunMode.RawPower);
+        shooter2.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        shooter2.setInverted(true);
+
         setShooterMotorState(ShooterMotorState.IDLE);
         setTargetTps(0);
 
@@ -69,13 +79,16 @@ public class ShooterSubsystem extends SubsystemBase {
 
             output = Range.clip(output, -1.0, 1.0);
 
-            flywheelMotor.set(output);
+            shooter1.set(output);
+            shooter2.set(output);
         }
         else if (shooterMotorState == ShooterMotorState.IDLE) {
-            flywheelMotor.set(idlePower);
+            shooter1.set(idlePower);
+            shooter2.set(idlePower);
         }
         else if (shooterMotorState == ShooterMotorState.UNPOWERED) {
-            flywheelMotor.set(0);
+            shooter1.set(0);
+            shooter2.set(0);
         }
 
         if (shooterAngleState == ShooterAngleState.AUTO) {
@@ -88,7 +101,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setTargetTps(double targetTps) {
-        this.targetTps = (int)targetTps;
+        this.targetTps = targetTps;
     }
 
     public void setAngle(double angle) {
@@ -105,12 +118,12 @@ public class ShooterSubsystem extends SubsystemBase {
         return angleServo.get();
     }
 
-    public int getTargetTps() {
+    public double getTargetTps() {
         return targetTps;
     }
 
-    public int getCurrentTps() {
-        return (int)flywheelMotor.getCorrectedVelocity();
+    public double getCurrentTps() {
+        return shooter1.getCorrectedVelocity();
     }
 
     public ShooterMotorState getShooterMotorState() {
@@ -129,10 +142,11 @@ public class ShooterSubsystem extends SubsystemBase {
         this.shooterAngleState = shooterAngleState;
     }
 
-    public int getError() {
+    public double getError() {
         return targetTps - getCurrentTps();
     }
 
+    @Deprecated
     public static void setkP(double kP) {
         ShooterSubsystem.kP = kP;
     }
@@ -144,7 +158,7 @@ public class ShooterSubsystem extends SubsystemBase {
         angleServo.set(localAngle);
     }
 
-    public void setLocalTargetTps(int localTargetTps) {
+    public void setLocalTargetTps(double localTargetTps) {
         this.localTargetTps = localTargetTps;
         setLocal();
     }
@@ -160,7 +174,7 @@ public class ShooterSubsystem extends SubsystemBase {
         setLocal();
     }
 
-    public int getLocalTargetTps() {
+    public double getLocalTargetTps() {
         return localTargetTps;
     }
 

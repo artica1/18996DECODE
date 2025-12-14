@@ -21,9 +21,9 @@ import org.firstinspires.ftc.teamcode.HardwareMapNames;
 @Configurable
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(10)
-            .forwardZeroPowerAcceleration(-28.146)
-            .lateralZeroPowerAcceleration(-57.86)
+            .mass(10.5)
+            .forwardZeroPowerAcceleration(-33.26)
+            .lateralZeroPowerAcceleration(-72.65)
             .translationalPIDFCoefficients(new PIDFCoefficients(
                     0.08,
                     0,
@@ -47,7 +47,7 @@ public class Constants {
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(
                     0.03,
                     0,
-                    0.00001,
+                    0.001,
                     0.6,
                     0.03
             ))
@@ -65,11 +65,11 @@ public class Constants {
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .xVelocity(82.67)
-            .yVelocity(66.31)
+            .xVelocity(84.25)
+            .yVelocity(67.46)
             .useBrakeModeInTeleOp(true);
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
+    public static PathConstraints pathConstraints = new PathConstraints(0.995, 100, 1.35, 1);
 
     public static PinpointConstants pinpointConstants = new PinpointConstants()
             .forwardPodY(92)
@@ -78,7 +78,7 @@ public class Constants {
             .hardwareMapName(HardwareMapNames.PINPOINT)
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
     public static Follower createFollower(HardwareMap hardwareMap, Localizer localizer) {
         return new FollowerBuilder(followerConstants, hardwareMap)

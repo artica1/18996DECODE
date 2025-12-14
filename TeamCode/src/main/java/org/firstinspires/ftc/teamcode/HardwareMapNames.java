@@ -7,7 +7,8 @@ public class HardwareMapNames {
     // EXAMPLE
     // public static String INTAKE_MOTOR = "intakeMotor";
 
-    public static String SHOOTER_MOTOR = "shooterMotor";
+    public static String SHOOTER_MOTOR_1 = "shooterMotor1";
+    public static String SHOOTER_MOTOR_2 = "shooterMotor2";
     public static String SHOOTER_SERVO = "shooterServo";
 
     public static String INTAKE_MOTOR = "intakeMotor";

@@ -40,10 +40,10 @@ public class Robot {
         colorSensorManager = new ColorSensorManager(hardwareMap);
 
         if (team == Team.RED) {
-            GlobalDataStorage.goalPose = new Pose(144, 144);
+            GlobalDataStorage.goalPose = new Pose(144 - 10, 144 - 10);
         }
         else if (team == Team.BLUE) {
-            GlobalDataStorage.goalPose = new Pose(0, 144);
+            GlobalDataStorage.goalPose = new Pose(0 + 10, 144 - 10);
         }
 
         for (Subsystems subsystem : subsystems) {
@@ -74,5 +74,7 @@ public class Robot {
         drive.update();
 
         shooter.updateDistanceToGoal(localizer.getDistanceToGoal());
+
+        GlobalDataStorage.robotPose = localizer.getPose().copy();
     }
 }

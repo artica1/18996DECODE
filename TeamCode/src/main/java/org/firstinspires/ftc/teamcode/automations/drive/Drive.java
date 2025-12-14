@@ -35,14 +35,18 @@ public class Drive {
 
     public void update() {
         follower.update();
-
-        GlobalDataStorage.robotPose = follower.getPose();
     }
 
     // todo rate profiling
     // todo fine control
     public void setTeleOpVectors(double x, double y, double h) {
-        follower.setTeleOpDrive(-y, -x, -h);
+        if (driveMode == DriveMode.MANUAL) {
+            follower.setTeleOpDrive(-y, -x, -h);
+        } else if (driveMode == DriveMode.FINE) {
+            follower.setTeleOpDrive(-y * 0.3, -x * 0.3, -h * 0.3);
+        } else {
+            follower.holdPoint(new BezierPoint(holdPoint), holdPoint.getHeading() + 0.275 * -h, false);
+        }
     }
 
     public void setDriveMode(@NonNull DriveMode driveMode) {

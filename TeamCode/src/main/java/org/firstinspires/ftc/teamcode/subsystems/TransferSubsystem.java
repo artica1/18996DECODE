@@ -45,7 +45,7 @@ public class TransferSubsystem extends SubsystemBase {
                 case REVERSE:
                     return -1.0;
                 case HOLD:
-                    return 0.5;
+                    return 0.2;
                 case CUSTOM:
                 case DISABLED:
                     return 0;
