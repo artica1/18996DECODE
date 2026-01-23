@@ -16,29 +16,30 @@ import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.automations.commands.AdjustShooterSpeedCommand;
 import org.firstinspires.ftc.teamcode.automations.commands.AutoShootCommand;
 import org.firstinspires.ftc.teamcode.automations.commands.HoldPointCommand;
-import org.firstinspires.ftc.teamcode.automations.commands.ProgressTransferCommand;
 import org.firstinspires.ftc.teamcode.automations.drive.Drive;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.ShooterSubsystem;
 
 @Autonomous
-public class TwelveBallNoGate extends OpMode {
+public class fifteen extends OpMode {
     private Robot robot;
-
-    // gate hit
-    // 25.6 56 155
-
-    // gate prepare
-    // 30.7 53.5 155
-
-    //
 
     private Timer pathTimer, autoTimer;
     private int pathState;
 
-    private Pose startPose, shootPose, intakeMark1StartPose, intakeMark1EndPose, intakeMark2StartPose, intakeMark2EndPose, intakeMark3StartPose, intakeMark3EndPose, parkPose;
+    private Pose startPose, shootPose,
+            intakeMark1StartPose, intakeMark1EndPose,
+            intakeMark2StartPose, intakeMark2EndPose,
+            intakeMark3StartPose, intakeMark3EndPose,
+            parkPose,
+            gateContactPose, gatePreparePose;
 
-    public PathChain shootPreload, prepareMark1, intakeMark1, shootMark1, prepareMark2, intakeMark2, shootMark2, prepareMark3, intakeMark3, shootMark3, park;
+    public PathChain shootPreload,
+            prepareMark1, intakeMark1, shootMark1,
+            prepareMark2, intakeMark2, shootMark2,
+            prepareMark3, intakeMark3, shootMark3,
+            park,
+            prepareGate, contactGate, shootGate;
 
     private Command autoShootCommand = new InstantCommand();
     private Command adjustShooterSpeedCommand = new InstantCommand();
@@ -51,25 +52,15 @@ public class TwelveBallNoGate extends OpMode {
 
         CommandScheduler.getInstance().reset();
 
-        GlobalDataStorage.staticLocalizer = null;
-        robot = new Robot(hardwareMap, GlobalDataStorage.autoTeam, true);
+        robot = new Robot(hardwareMap, GlobalDataStorage.autoTeam);
 
         buildPoses(GlobalDataStorage.autoTeam);
         buildPaths();
 
         robot.drive.setDriveMode(Drive.DriveMode.AUTO);
-        robot.localizer.setPose(startPose);
+        robot.drive.follower.setStartingPose(startPose);
 
         robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
-
-        telemetry.addData("x", robot.localizer.getPose().getX());
-        telemetry.addData("y", robot.localizer.getPose().getY());
-        telemetry.addData("heading", robot.localizer.getPose().getHeading());
-        telemetry.addData("Pose", startPose);
-        telemetry.addData("Transfer", robot.transfer.getTransferState());
-        telemetry.addData("Power", robot.transfer.transferMotor.get());
-        telemetry.addData("Transfer Error", robot.transfer.getError());
-        telemetry.update();
     }
 
     @Override
@@ -90,8 +81,6 @@ public class TwelveBallNoGate extends OpMode {
         telemetry.addData("heading", robot.localizer.getPose().getHeading());
         telemetry.addData("busy", robot.drive.follower.isBusy());
         telemetry.addData("error", robot.shooter.getError());
-        telemetry.addData("Transfer", robot.transfer.getTransferState());
-        telemetry.addData("Transfer Error", robot.transfer.getError());
         telemetry.update();
     }
 
@@ -109,9 +98,9 @@ public class TwelveBallNoGate extends OpMode {
             case 1:
                 if(!robot.drive.follower.isBusy()) {
                     holdPointCommand = new HoldPointCommand(robot);
-                    autoShootCommand = new ProgressTransferCommand(robot, true);
+                    autoShootCommand = new AutoShootCommand(robot);
 
-                    holdPointCommand.schedule();
+                    //holdPointCommand.schedule();
                     autoShootCommand.schedule();
                     setPathState(2);
                 }
@@ -145,7 +134,7 @@ public class TwelveBallNoGate extends OpMode {
                     holdPointCommand = new HoldPointCommand(robot);
                     autoShootCommand = new AutoShootCommand(robot);
 
-                    holdPointCommand.schedule();
+                    //holdPointCommand.schedule();
                     autoShootCommand.schedule();
                     setPathState(6);
                 }
@@ -159,8 +148,7 @@ public class TwelveBallNoGate extends OpMode {
                 }
                 break;
             case 7:
-                if (!robot.drive.follower.isBusy()) {
-
+                if(robot.drive.follower.getCurrentTValue() > 0.9) {
                     robot.drive.follower.setMaxPower(0.5);
                     robot.drive.follower.followPath(intakeMark2);
                     setPathState(8);
@@ -179,6 +167,39 @@ public class TwelveBallNoGate extends OpMode {
                     holdPointCommand = new HoldPointCommand(robot);
                     autoShootCommand = new AutoShootCommand(robot);
 
+                    //holdPointCommand.schedule();
+                    autoShootCommand.schedule();
+                    setPathState(110);
+                }
+                break;
+            case 110:
+                if(autoShootCommand.isFinished()) {
+                    robot.drive.follower.followPath(prepareGate);
+                    setPathState(111);
+                }
+                break;
+            case 111:
+                if(!robot.drive.follower.isBusy()) {
+                    robot.intake.setIntakeState(IntakeSubsystem.IntakeState.INTAKE);
+
+                    robot.drive.follower.setMaxPower(0.6);
+                    robot.drive.follower.followPath(contactGate);
+                    setPathState(112);
+                }
+                break;
+            case 112:
+                if(pathTimer.getElapsedTime() > 1000) {
+
+                    robot.drive.follower.setMaxPower(1.0);
+                    robot.drive.follower.followPath(shootGate);
+                    setPathState(113);
+                }
+                break;
+            case 113:
+                if(!robot.drive.follower.isBusy()) {
+                    //holdPointCommand = new HoldPointCommand(robot);
+                    autoShootCommand = new AutoShootCommand(robot);
+
                     holdPointCommand.schedule();
                     autoShootCommand.schedule();
                     setPathState(10);
@@ -193,7 +214,7 @@ public class TwelveBallNoGate extends OpMode {
                 }
                 break;
             case 11:
-                if (!robot.drive.follower.isBusy()) {
+                if (robot.drive.follower.getCurrentTValue() > 0.90) {
 
                     robot.drive.follower.setMaxPower(0.5);
                     robot.drive.follower.followPath(intakeMark3);
@@ -213,7 +234,7 @@ public class TwelveBallNoGate extends OpMode {
                     holdPointCommand = new HoldPointCommand(robot);
                     autoShootCommand = new AutoShootCommand(robot);
 
-                    holdPointCommand.schedule();
+                    //holdPointCommand.schedule();
                     autoShootCommand.schedule();
                     setPathState(14);
                 }
@@ -326,14 +347,40 @@ public class TwelveBallNoGate extends OpMode {
                         )
                 ).setConstantHeadingInterpolation(parkPose.getHeading())
                 .build();
+
+        prepareGate = robot.drive.follower.pathBuilder().addPath(
+                        new BezierLine(
+                                shootPose,
+                                gatePreparePose
+                        )
+                ).setLinearHeadingInterpolation(shootPose.getHeading(), gatePreparePose.getHeading())
+                .addParametricCallback(0.6, () -> robot.drive.follower.setMaxPower(0.5))
+                .build();
+
+        contactGate = robot.drive.follower.pathBuilder().addPath(
+                        new BezierLine(
+                                gatePreparePose,
+                                gateContactPose
+                        )
+                ).setConstantHeadingInterpolation(gateContactPose.getHeading())
+                .build();
+
+        shootGate = robot.drive.follower.pathBuilder().addPath(
+                        new BezierLine(
+                                gateContactPose,
+                                shootPose
+                        )
+                ).setLinearHeadingInterpolation(gateContactPose.getHeading(), shootPose.getHeading())
+                .addParametricCallback(0.3, ()-> robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD))
+                .build();
     }
 
     public void buildPoses(Robot.Team team) {
         // BUILT FOR BLUE
-        startPose = new Pose(18.6, 121.9, Math.toRadians(142.6));
+        startPose = new Pose(19, 121, Math.toRadians(141));
         // startPose = new Pose(56, 10, Math.toRadians(90));
 
-        shootPose = new Pose(55, 86, Math.toRadians(135));
+        shootPose = new Pose(47.1, 92.6, Math.toRadians(133));
 
         intakeMark1StartPose = new Pose(42, 84, Math.toRadians(180));
 
@@ -348,6 +395,10 @@ public class TwelveBallNoGate extends OpMode {
         intakeMark3EndPose = new Pose(12, 36, Math.toRadians(180));
 
         parkPose = new Pose(42, 84, Math.toRadians(135));
+
+        gatePreparePose = new Pose(11.5, 58.7, Math.toRadians(143.2));
+
+        gateContactPose = new Pose(10.3, 61.0, Math.toRadians(148.0));
 
         if (team == Robot.Team.RED) {
             startPose = startPose.mirror();
@@ -364,6 +415,9 @@ public class TwelveBallNoGate extends OpMode {
             intakeMark3EndPose = intakeMark3EndPose.mirror();
 
             parkPose = parkPose.mirror();
+
+            gatePreparePose = gatePreparePose.mirror();
+            gateContactPose = gateContactPose.mirror();
         }
 
         // built for red mirrors

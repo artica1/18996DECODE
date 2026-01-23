@@ -1,21 +1,44 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
+import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+import com.seattlesolvers.solverslib.hardware.motors.Motor;
+import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
-import com.seattlesolvers.solverslib.hardware.motors.CRServoEx;
+
+import org.firstinspires.ftc.teamcode.GlobalDataStorage;
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
 
 @Configurable
+@Config
 public class TransferSubsystem extends SubsystemBase {
-    private final CRServoEx servoRight;
-    private final CRServoEx servoLeft;
-
     private final ServoEx gateServo;
 
-    private BeltState beltState;
+    public final MotorEx transferMotor;
+
+    private TransferState transferState;
     private GatePosition gatePosition;
+
+    public static double kP = 0.011;
+    public static double kD = 0.00003;
+    public static double kF = 0.09;
+
+    public static int INTAKE_POS = 0;
+    public static int ONE_POS = 35;
+    public static int TWO_POS = 115;
+    public static int THREE_POS = 290;
+
+    public static double maxProgressSpeed = 1.0;
+    public static double maxReturnSpeed = 1.0;
+
+    private double targetPosition;
+    private double previousPosition;
+
+    Timer timer = new Timer();
 
     public enum GatePosition {
         OPEN,
@@ -32,22 +55,23 @@ public class TransferSubsystem extends SubsystemBase {
         }
     }
 
-    public enum BeltState {
+    public enum TransferState {
         INTAKE,
-        REVERSE,
-        DISABLED,
-        HOLD,
-        CUSTOM;
+        ONE,
+        TWO,
+        THREE,
+        ZEROING;
         public double getValue() {
             switch (this) {
                 case INTAKE:
-                    return 1.0;
-                case REVERSE:
-                    return -1.0;
-                case HOLD:
-                    return 0.2;
-                case CUSTOM:
-                case DISABLED:
+                    return INTAKE_POS;
+                case ONE:
+                    return ONE_POS;
+                case TWO:
+                    return TWO_POS;
+                case THREE:
+                    return THREE_POS;
+                case ZEROING:
                     return 0;
                 default:
                     throw new IllegalArgumentException();
@@ -56,32 +80,79 @@ public class TransferSubsystem extends SubsystemBase {
     }
 
     public TransferSubsystem(HardwareMap hardwareMap) {
-        servoRight = new CRServoEx(hardwareMap, HardwareMapNames.TRANSFER_SERVO_RIGHT);
-        servoRight.set(0);
+        transferMotor = new MotorEx(hardwareMap, HardwareMapNames.TRANSFER_MOTOR, Motor.GoBILDA.RPM_1150);
 
-        servoLeft = new CRServoEx(hardwareMap, HardwareMapNames.TRANSFER_SERVO_LEFT);
-        servoLeft.set(0);
-        servoLeft.setInverted(true);
+        transferMotor.setRunMode(Motor.RunMode.RawPower);
+        transferMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        transferMotor.setInverted(true);
+
+        previousPosition = getCurrentPosition();
+        timer.resetTimer();
 
         gateServo = new ServoEx(hardwareMap, HardwareMapNames.GATE_SERVO);
 
         setGatePosition(GatePosition.OPEN);
         setGatePosition(GatePosition.CLOSED);
-        setBeltState(BeltState.DISABLED);
+
+        if (GlobalDataStorage.transferState == null) resetEncoder();
+        else setTransferState(GlobalDataStorage.transferState);
     }
 
-    public void setBeltState(BeltState beltState) {
-        this.beltState = beltState;
+    @Override
+    public void periodic() {
+        if (transferState != TransferState.ZEROING) {
+            double output = 0;
 
-        servoRight.set(beltState.getValue());
-        servoLeft.set(beltState.getValue());
+            output += kF * Math.signum(getError());
+
+            output += kP * getError();
+
+            output += kD * (getCurrentPosition() - previousPosition) / timer.getElapsedTimeSeconds();
+
+            if (Math.abs(getError()) > 20 && getError() > 0) {
+                output = maxProgressSpeed;
+            }
+
+            if (transferState == TransferState.INTAKE && Math.abs(getError()) < 10) {
+                output = -0.1;
+            }
+
+            output = Range.clip(output, -maxReturnSpeed, maxProgressSpeed);
+
+            transferMotor.set(output);
+
+            previousPosition = getCurrentPosition();
+            timer.resetTimer();
+        } else transferMotor.set(-1.0);
     }
 
-    public void setCustomBeltSpeed(double speed) {
-        beltState = BeltState.CUSTOM;
+    public void setTransferState(TransferState transferState) {
+        this.transferState = transferState;
 
-        servoRight.set(speed);
-        servoLeft.set(speed);
+        GlobalDataStorage.transferState = transferState;
+
+        targetPosition = transferState.getValue();
+    }
+
+    public void resetEncoder() {
+        transferMotor.resetEncoder();
+        setTransferState(TransferState.INTAKE);
+    }
+
+    public double getTargetPosition() {
+        return targetPosition;
+    }
+
+    public double getCurrentPosition() {
+        return transferMotor.getCurrentPosition();
+    }
+
+    public double getError() {
+        return targetPosition - getCurrentPosition();
+    }
+
+    public void setMaxProgressSpeed(double maxProgressSpeed) {
+        TransferSubsystem.maxProgressSpeed = maxProgressSpeed;
     }
 
     public void setGatePosition(GatePosition gatePosition) {
@@ -90,8 +161,8 @@ public class TransferSubsystem extends SubsystemBase {
         gateServo.set(gatePosition.getValue());
     }
 
-    public BeltState getBeltState() {
-        return beltState;
+    public TransferState getTransferState() {
+        return transferState;
     }
 
     public GatePosition getGatePosition() {

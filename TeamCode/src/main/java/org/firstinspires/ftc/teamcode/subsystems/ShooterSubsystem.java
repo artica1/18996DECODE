@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
@@ -15,31 +16,34 @@ import org.firstinspires.ftc.teamcode.automations.ShooterCalculations;
 
 import java.util.List;
 
+@Config
 @Configurable
 public class ShooterSubsystem extends SubsystemBase {
-    private MotorEx shooter1;
-    private MotorEx shooter2;
+    public MotorEx shooter1;
+    public MotorEx shooter2;
     private ShooterMotorState shooterMotorState;
     private ShooterAngleState shooterAngleState;
 
     private double distanceToGoal = 0; // cant be zero idfk why
 
-    public static double kS = 0.15;
-    public static double kV = 0.00044;
-    public static double kP = 0.005;
-    private final double idlePower = 0.4;
+    public static double kS = 0.1;
+    public static double kV = 0.00046;
+    public static double kP = 0.030;
+    public double idlePower = 0.5;
 
     private final ServoEx angleServo;
 
-    private double localAngle = 40;
-    private double localTargetTps = 1250;
+    private double localAngle = 35;
+    private double localTargetTps = 1150;
 
     private double targetTps;
 
     public enum ShooterMotorState {
         ACTIVE,
         IDLE,
-        UNPOWERED
+        MAX,
+        UNPOWERED,
+        BANG
     }
 
     public enum ShooterAngleState {
@@ -90,6 +94,19 @@ public class ShooterSubsystem extends SubsystemBase {
             shooter1.set(0);
             shooter2.set(0);
         }
+        else if (shooterMotorState == ShooterMotorState.MAX) {
+            shooter1.set(1.0);
+            shooter2.set(1.0);
+        }
+        else if (shooterMotorState == ShooterMotorState.BANG) {
+            if (getError() > 0) {
+                shooter1.set(1.0);
+                shooter2.set(1.0);
+            } else if (getError() < 0) {
+                shooter1.set(0);
+                shooter2.set(0);
+            }
+        }
 
         if (shooterAngleState == ShooterAngleState.AUTO) {
             setAngle(ShooterCalculations.getAngle(distanceToGoal));
@@ -131,6 +148,8 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setShooterMotorState(ShooterMotorState shooterMotorState) {
+        if (shooterMotorState == ShooterMotorState.ACTIVE) shooterMotorState = ShooterMotorState.BANG;
+
         this.shooterMotorState = shooterMotorState;
     }
 
@@ -143,7 +162,9 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public double getError() {
-        return targetTps - getCurrentTps();
+        // uhhhhhhhh hmmmm
+        if (shooterMotorState == ShooterMotorState.IDLE || shooterMotorState == ShooterMotorState.MAX || shooterMotorState == ShooterMotorState.UNPOWERED) return 0;
+        else return targetTps - getCurrentTps();
     }
 
     @Deprecated

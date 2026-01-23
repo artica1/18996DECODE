@@ -1,12 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Math.PI;
+
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.seattlesolvers.solverslib.command.CommandScheduler;
 
 import org.firstinspires.ftc.teamcode.automations.ColorSensorManager;
+import org.firstinspires.ftc.teamcode.automations.commands.ZeroTransferCommand;
 import org.firstinspires.ftc.teamcode.automations.drive.Drive;
 import org.firstinspires.ftc.teamcode.automations.odo.STATICLocalizer;
-import org.firstinspires.ftc.teamcode.automations.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
@@ -33,7 +36,7 @@ public class Robot {
         DRIVE
     }
 
-    public Robot(HardwareMap hardwareMap, Team team, Subsystems... subsystems) {
+    public Robot(HardwareMap hardwareMap, Team team, boolean resetEncoder, Subsystems... subsystems) {
         this.hardwareMap = hardwareMap;
         GlobalDataStorage.team = team;
 
@@ -52,12 +55,20 @@ public class Robot {
             }
             if (subsystem == Subsystems.TRANSFER) {
                 transfer = new TransferSubsystem(hardwareMap);
+
+                if (resetEncoder) {
+                    CommandScheduler.getInstance().schedule(new ZeroTransferCommand(transfer));
+                }
             }
             if (subsystem == Subsystems.SHOOTER) {
                 shooter = new ShooterSubsystem(hardwareMap);
             }
             if (subsystem == Subsystems.LOCALIZER) {
-                localizer = new STATICLocalizer(hardwareMap);
+                if (GlobalDataStorage.staticLocalizer == null) {
+                    localizer = new STATICLocalizer(hardwareMap, new Pose(72, 72, PI/2), STATICLocalizer.LocalizerMode.NO_ULTRASONICS);
+                } else {
+                    localizer = GlobalDataStorage.staticLocalizer;
+                }
             }
             if (subsystem == Subsystems.DRIVE) {
                 drive = new Drive(hardwareMap, localizer);
@@ -66,15 +77,19 @@ public class Robot {
     }
 
     public Robot(HardwareMap hardwareMap, Team team) {
-        this(hardwareMap, team, Robot.Subsystems.INTAKE, Subsystems.TRANSFER, Subsystems.SHOOTER, Subsystems.LOCALIZER, Subsystems.DRIVE);
+        this(hardwareMap, team, false, Robot.Subsystems.INTAKE, Subsystems.TRANSFER, Subsystems.SHOOTER, Subsystems.LOCALIZER, Subsystems.DRIVE);
+    }
+
+    // TODO is this neccessay?????????????🥸🥸🥸
+    public Robot(HardwareMap hardwareMap, Team team, boolean resetEncoder) {
+        this(hardwareMap, team, true, Robot.Subsystems.INTAKE, Subsystems.TRANSFER, Subsystems.SHOOTER, Subsystems.LOCALIZER, Subsystems.DRIVE);
     }
 
     public void update() {
         localizer.update();
-        drive.update();
 
         shooter.updateDistanceToGoal(localizer.getDistanceToGoal());
 
-        GlobalDataStorage.robotPose = localizer.getPose().copy();
+        drive.update();
     }
 }

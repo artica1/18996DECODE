@@ -12,8 +12,7 @@ public class HardwareMapNames {
     public static String SHOOTER_SERVO = "shooterServo";
 
     public static String INTAKE_MOTOR = "intakeMotor";
-    public static String TRANSFER_SERVO_RIGHT = "leftBeltServo";
-    public static String TRANSFER_SERVO_LEFT = "rightBeltServo";
+    public static String TRANSFER_MOTOR = "transferMotor";
     public static String GATE_SERVO = "gateServo";
 
     public static String DRIVE_FRONT_LEFT = "frontLeft";

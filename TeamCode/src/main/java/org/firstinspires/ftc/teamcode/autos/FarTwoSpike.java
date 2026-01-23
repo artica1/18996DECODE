@@ -18,9 +18,6 @@ import org.firstinspires.ftc.teamcode.automations.commands.HoldPointCommand;
 import org.firstinspires.ftc.teamcode.automations.drive.Drive;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.ShooterSubsystem;
-import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
-
-import java.util.stream.Stream;
 
 @Autonomous
 public class FarTwoSpike extends OpMode {
@@ -72,7 +69,6 @@ public class FarTwoSpike extends OpMode {
         telemetry.addData("heading", Math.toRadians(robot.localizer.getPose().getHeading()));
         telemetry.addData("busy", robot.drive.follower.isBusy());
         telemetry.addData("error", robot.shooter.getError());
-        telemetry.addData("GLOBAL", GlobalDataStorage.robotPose);
         telemetry.update();
     }
 
@@ -81,7 +77,6 @@ public class FarTwoSpike extends OpMode {
             case 0:
                 robot.drive.follower.followPath(shootPreload);
                 robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
-                robot.transfer.setBeltState(TransferSubsystem.BeltState.HOLD);
 
                 adjustShooterSpeedCommand = new AdjustShooterSpeedCommand(robot, shootPose);
                 adjustShooterSpeedCommand.schedule();
@@ -101,7 +96,6 @@ public class FarTwoSpike extends OpMode {
             case 2:
                 if(autoShootCommand.isFinished()) {
                     robot.intake.setIntakeState(IntakeSubsystem.IntakeState.INTAKE);
-                    robot.transfer.setBeltState(TransferSubsystem.BeltState.INTAKE);
 
                     robot.drive.follower.followPath(prepareMark3);
                     setPathState(3);
@@ -118,7 +112,6 @@ public class FarTwoSpike extends OpMode {
             case 4:
                 if(!robot.drive.follower.isBusy()) {
                     robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
-                    robot.transfer.setBeltState(TransferSubsystem.BeltState.HOLD);
 
                     robot.drive.follower.setMaxPower(1.0);
                     robot.drive.follower.followPath(shootMark3);
@@ -138,7 +131,6 @@ public class FarTwoSpike extends OpMode {
             case 6:
                 if(autoShootCommand.isFinished()) {
                     robot.intake.setIntakeState(IntakeSubsystem.IntakeState.INTAKE);
-                    robot.transfer.setBeltState(TransferSubsystem.BeltState.INTAKE);
 
                     robot.drive.follower.followPath(prepareMark2);
                     setPathState(7);
@@ -155,7 +147,6 @@ public class FarTwoSpike extends OpMode {
             case 8:
                 if(!robot.drive.follower.isBusy()) {
                     robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
-                    robot.transfer.setBeltState(TransferSubsystem.BeltState.HOLD);
 
                     robot.drive.follower.setMaxPower(1.0);
                     robot.drive.follower.followPath(shootMark2);
@@ -175,7 +166,6 @@ public class FarTwoSpike extends OpMode {
             case 10:
                 if(autoShootCommand.isFinished()) {
                     robot.intake.setIntakeState(IntakeSubsystem.IntakeState.INTAKE);
-                    robot.transfer.setBeltState(TransferSubsystem.BeltState.INTAKE);
 
                     robot.drive.follower.setMaxPower(0.5);
                     robot.drive.follower.followPath(prepareHpIntake);
@@ -192,24 +182,13 @@ public class FarTwoSpike extends OpMode {
             case 12:
                 if(pathTimer.getElapsedTime() > 1000) {
                     robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
-                    robot.transfer.setBeltState(TransferSubsystem.BeltState.HOLD);
 
                     robot.drive.follower.setMaxPower(1.0);
                     robot.drive.follower.followPath(shootHp);
-                    setPathState(13);
+                    setPathState(9);
                 }
                 break;
             case 13:
-                if(!robot.drive.follower.isBusy()) {
-                    holdPointCommand = new HoldPointCommand(robot);
-                    autoShootCommand = new AutoShootCommand(robot);
-
-                    holdPointCommand.schedule();
-                    autoShootCommand.schedule();
-                    setPathState(10);
-                }
-                break;
-            case 14:
                 if(autoShootCommand.isFinished()) {
                     robot.drive.follower.setMaxPower(0.5);
                     robot.drive.follower.followPath(park);
@@ -217,7 +196,6 @@ public class FarTwoSpike extends OpMode {
                     robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.IDLE);
 
                     robot.intake.setIntakeState(IntakeSubsystem.IntakeState.DISABLED);
-                    robot.transfer.setBeltState(TransferSubsystem.BeltState.DISABLED);
                     setPathState(-1);
                 }
                 break;
@@ -318,7 +296,6 @@ public class FarTwoSpike extends OpMode {
     public void buildPoses(Robot.Team team) {
         // BUILT FOR BLUE
         startPose = new Pose(57, 8, Math.toRadians(90));
-        // startPose = new Pose(56, 10, Math.toRadians(90));
 
         shootPose = new Pose(59, 19, Math.toRadians(110));
 
@@ -337,20 +314,20 @@ public class FarTwoSpike extends OpMode {
         parkPose = new Pose(54, 24, Math.toRadians(135));
 
         if (team == Robot.Team.RED) {
-            startPose.mirror();
+            startPose = startPose.mirror();
 
-            shootPose.mirror();
+            shootPose = shootPose.mirror();
 
-            intakeMark3StartPose.mirror();
-            intakeMark3EndPose.mirror();
+            intakeMark3StartPose = intakeMark3StartPose.mirror();
+            intakeMark3EndPose = intakeMark3EndPose.mirror();
 
-            intakeMark2StartPose.mirror();
-            intakeMark2EndPose.mirror();
+            intakeMark2StartPose = intakeMark2StartPose.mirror();
+            intakeMark2EndPose = intakeMark2EndPose.mirror();
 
-            hpIntakeStartPose.mirror();
-            hpIntakeEndPose.mirror();
+            hpIntakeStartPose = hpIntakeStartPose.mirror();
+            hpIntakeEndPose = hpIntakeEndPose.mirror();
 
-            parkPose.mirror();
+            parkPose = parkPose.mirror();
         }
 
         // built for red mirrors

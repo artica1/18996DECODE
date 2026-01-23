@@ -28,7 +28,7 @@ public class IntakeSubsystem extends SubsystemBase {
                 case OUTTAKE:
                     return 1.0;
                 case HOLD:
-                    return 0.1;
+                    return 0.2;
                 case INTAKE:
                     return 1.0;
                 case REVERSE:

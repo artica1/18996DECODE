@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.automations.drive;
 
 import androidx.annotation.NonNull;
 
+import com.pedropathing.control.PIDFController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
@@ -16,11 +17,14 @@ public class Drive {
     private DriveMode driveMode;
     private Pose holdPoint;
 
+    PIDFController headingController;
+
     public enum DriveMode {
         MANUAL,
         FINE,
         HOLD_POINT,
-        AUTO
+        AUTO,
+        HEADING_LOCK
     }
 
     public Drive(HardwareMap hardwareMap, Localizer localizer) {
@@ -30,11 +34,14 @@ public class Drive {
     public Drive(HardwareMap hardwareMap, Localizer localizer, DriveMode driveMode) {
         follower = Constants.createFollower(hardwareMap, localizer);
 
+        headingController = new PIDFController(follower.constants.coefficientsHeadingPIDF);
+
         setDriveMode(driveMode);
     }
 
     public void update() {
         follower.update();
+        headingController.updateError(follower.getHeadingError());
     }
 
     // todo rate profiling
@@ -44,6 +51,8 @@ public class Drive {
             follower.setTeleOpDrive(-y, -x, -h);
         } else if (driveMode == DriveMode.FINE) {
             follower.setTeleOpDrive(-y * 0.3, -x * 0.3, -h * 0.3);
+        } else if (driveMode == DriveMode.HEADING_LOCK) {
+
         } else {
             follower.holdPoint(new BezierPoint(holdPoint), holdPoint.getHeading() + 0.275 * -h, false);
         }

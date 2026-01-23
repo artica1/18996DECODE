@@ -6,6 +6,7 @@ import com.pedropathing.ftc.localization.localizers.PinpointLocalizer;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.math.Vector;
+import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.GlobalDataStorage;
@@ -17,6 +18,8 @@ public class STATICLocalizer implements Localizer {
     private final UltrasonicsManager ultrasonicsManager;
 
     private LocalizerMode localizerMode;
+
+    private final Timer llTimer = new Timer();
 
     public enum LocalizerMode {
         All,
@@ -30,7 +33,7 @@ public class STATICLocalizer implements Localizer {
     }
 
     public STATICLocalizer(HardwareMap hardwareMap, Pose setStartPose) {
-        this(hardwareMap, setStartPose, LocalizerMode.PINPOINT_ONLY);
+        this(hardwareMap, setStartPose, LocalizerMode.NO_ULTRASONICS);
     }
 
     public STATICLocalizer(HardwareMap hardwareMap, Pose setStartPose, LocalizerMode localizerMode) {
@@ -38,6 +41,7 @@ public class STATICLocalizer implements Localizer {
         limelightManager = new LimelightManager(hardwareMap);
         ultrasonicsManager = new UltrasonicsManager(hardwareMap);
         this.localizerMode = localizerMode;
+        llTimer.resetTimer();
     }
 
     @Override
@@ -57,7 +61,9 @@ public class STATICLocalizer implements Localizer {
 
     @Override
     public void setStartPose(Pose setStart) {
-        pinpoint.setStartPose(setStart);
+        if (setStart != null) {
+            pinpoint.setStartPose(setStart);
+        }
     }
 
     @Override
@@ -76,8 +82,9 @@ public class STATICLocalizer implements Localizer {
 
         pinpoint.update();
 
-        if (localizerMode == LocalizerMode.All || localizerMode == LocalizerMode.NO_ULTRASONICS) {
-           // setPose(limelightManager.getPose(getIMUHeading()));
+        if ((localizerMode == LocalizerMode.All || localizerMode == LocalizerMode.NO_ULTRASONICS) && llTimer.getElapsedTime() > 500) {
+           setPose(limelightManager.getPose(getIMUHeading()));
+           llTimer.resetTimer();
         }
     }
 
