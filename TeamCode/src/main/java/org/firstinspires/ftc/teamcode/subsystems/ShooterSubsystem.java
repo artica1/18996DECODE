@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
-import com.seattlesolvers.solverslib.hardware.motors.MotorGroup;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
@@ -14,9 +12,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
 import org.firstinspires.ftc.teamcode.automations.ShooterCalculations;
 
-import java.util.List;
+// TODO
+// SHOOTER REDESIGN
+// Active always tracks position and updates speed
+// Bang only activated when firing
+// Teleop toggles idle and such
 
-@Config
 @Configurable
 public class ShooterSubsystem extends SubsystemBase {
     public MotorEx shooter1;
@@ -26,10 +27,10 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private double distanceToGoal = 0; // cant be zero idfk why
 
-    public static double kS = 0.1;
-    public static double kV = 0.00046;
-    public static double kP = 0.030;
-    public double idlePower = 0.5;
+    public static double kS = 0.06;
+    public static double kV = 0.00035;
+    public static double kP = 0.001;
+    public double idlePower = 0.4;
 
     private final ServoEx angleServo;
 
@@ -57,10 +58,10 @@ public class ShooterSubsystem extends SubsystemBase {
 
         shooter1.setRunMode(Motor.RunMode.RawPower);
         shooter1.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        shooter1.setInverted(true);
 
         shooter2.setRunMode(Motor.RunMode.RawPower);
         shooter2.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-        shooter2.setInverted(true);
 
         setShooterMotorState(ShooterMotorState.IDLE);
         setTargetTps(0);
@@ -122,10 +123,10 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setAngle(double angle) {
-        if (angle < 5) {
-            angleServo.set(5);
-        } else if (angle > 45) {
-            angleServo.set(45);
+        if (angle < 0) {
+            angleServo.set(0);
+        } else if (angle > 365) {
+            angleServo.set(365);
         } else {
             angleServo.set(angle);
         }
@@ -148,8 +149,6 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setShooterMotorState(ShooterMotorState shooterMotorState) {
-        if (shooterMotorState == ShooterMotorState.ACTIVE) shooterMotorState = ShooterMotorState.BANG;
-
         this.shooterMotorState = shooterMotorState;
     }
 
@@ -185,10 +184,10 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setLocalAngle(double localAngle) {
-        if (localAngle < 5) {
-            this.localAngle = 5;
-        } else if (localAngle > 45) {
-            this.localAngle = 45;
+        if (localAngle < 0) {
+            this.localAngle = 0;
+        } else if (localAngle > 365) {
+            this.localAngle = 365;
         } else {
             this.localAngle = localAngle;
         }

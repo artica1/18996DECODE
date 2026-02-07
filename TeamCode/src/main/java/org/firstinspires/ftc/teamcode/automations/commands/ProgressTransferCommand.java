@@ -13,15 +13,21 @@ public class ProgressTransferCommand extends CommandBase {
     private Robot robot;
     private boolean continuous;
     private boolean changedState;
+    private boolean auto;
 
     Timer openTimer = new Timer();
     Timer closeTimer = new Timer();
     Timer firstTimer = new Timer();
 
-    public ProgressTransferCommand(Robot robot, boolean continuous, double maxProgressSpeed) {
+    public ProgressTransferCommand(Robot robot, boolean continuous, boolean auto, double maxProgressSpeed) {
         this.robot = robot;
         this.continuous = continuous;
-        robot.transfer.setMaxProgressSpeed(0.5);
+        this.auto = auto;
+        robot.transfer.setMaxProgressSpeed(maxProgressSpeed);
+    }
+
+    public ProgressTransferCommand(Robot robot, boolean continuous, double maxProgressSpeed) {
+        this(robot, continuous, false, maxProgressSpeed);
     }
 
     public ProgressTransferCommand(Robot robot, boolean continuous) {
@@ -36,6 +42,9 @@ public class ProgressTransferCommand extends CommandBase {
     public void initialize() {
         robot.transfer.setGatePosition(TransferSubsystem.GatePosition.OPEN);
 
+        if (robot.localizer.getDistanceToGoal() > 80) TransferSubsystem.constantSpeed = 0.8;
+        else TransferSubsystem.constantSpeed = 1.0;
+
         openTimer.resetTimer();
         changedState = false;
     }
@@ -48,8 +57,10 @@ public class ProgressTransferCommand extends CommandBase {
             if (firstTimer.getElapsedTime() > 130 || robot.transfer.getTransferState() != TransferSubsystem.TransferState.INTAKE) {
 
                 if (!changedState) {
-                    if (continuous)
-                        robot.transfer.setTransferState(TransferSubsystem.TransferState.THREE);
+                    if (continuous) {
+                        robot.transfer.setTransferState(TransferSubsystem.TransferState.CONSTANT);
+                      //  robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.BANG);
+                    }
                     else {
                         switch (robot.transfer.getTransferState()) {
                             case INTAKE:
@@ -72,19 +83,21 @@ public class ProgressTransferCommand extends CommandBase {
 
     @Override
     public boolean isFinished() {
-        if (robot.transfer.getTransferState() == TransferSubsystem.TransferState.THREE && robot.transfer.getError() < 0) return true;
+        if (robot.transfer.getTransferState() == TransferSubsystem.TransferState.CONSTANT && robot.transfer.getError() < 0) return true;
         else return changedState && Math.abs(robot.transfer.getError()) < 5 && closeTimer.getElapsedTime() > 100;
     }
 
     @Override
     public void end(boolean interrupted) {
         robot.transfer.setGatePosition(TransferSubsystem.GatePosition.CLOSED);
-        robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
 
-        robot.transfer.setMaxProgressSpeed(1.0);
+        if (!auto) robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD);
 
-        if (robot.transfer.getTransferState() == TransferSubsystem.TransferState.THREE) {
-            CommandScheduler.getInstance().schedule(new ZeroTransferCommand(robot.transfer));
+        TransferSubsystem.constantSpeed = 1.0;
+
+        if (robot.transfer.getTransferState() == TransferSubsystem.TransferState.THREE || robot.transfer.getTransferState() == TransferSubsystem.TransferState.CONSTANT) {
+            //robot.shooter.setShooterMotorState(ShooterSubsystem.ShooterMotorState.ACTIVE);
+            CommandScheduler.getInstance().schedule(new ZeroTransferCommand(robot.transfer, false, 250));
         }
     }
 }

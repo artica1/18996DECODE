@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -14,7 +13,6 @@ import org.firstinspires.ftc.teamcode.GlobalDataStorage;
 import org.firstinspires.ftc.teamcode.HardwareMapNames;
 
 @Configurable
-@Config
 public class TransferSubsystem extends SubsystemBase {
     private final ServoEx gateServo;
 
@@ -23,17 +21,19 @@ public class TransferSubsystem extends SubsystemBase {
     private TransferState transferState;
     private GatePosition gatePosition;
 
-    public static double kP = 0.011;
-    public static double kD = 0.00003;
-    public static double kF = 0.09;
+    public static double kP = 0.0025;
+    public static double kD = 0.00000;
+    public static double kF = 0.10;
 
     public static int INTAKE_POS = 0;
-    public static int ONE_POS = 35;
-    public static int TWO_POS = 115;
-    public static int THREE_POS = 290;
+    public static int ONE_POS = 92;
+    public static int TWO_POS = 303;
+    public static int THREE_POS = 780;
 
     public static double maxProgressSpeed = 1.0;
     public static double maxReturnSpeed = 1.0;
+
+    public static double constantSpeed = 1.0;
 
     private double targetPosition;
     private double previousPosition;
@@ -60,7 +60,8 @@ public class TransferSubsystem extends SubsystemBase {
         ONE,
         TWO,
         THREE,
-        ZEROING;
+        ZEROING,
+        CONSTANT;
         public double getValue() {
             switch (this) {
                 case INTAKE:
@@ -73,6 +74,8 @@ public class TransferSubsystem extends SubsystemBase {
                     return THREE_POS;
                 case ZEROING:
                     return 0;
+                case CONSTANT:
+                    return THREE_POS;
                 default:
                     throw new IllegalArgumentException();
             }
@@ -80,7 +83,7 @@ public class TransferSubsystem extends SubsystemBase {
     }
 
     public TransferSubsystem(HardwareMap hardwareMap) {
-        transferMotor = new MotorEx(hardwareMap, HardwareMapNames.TRANSFER_MOTOR, Motor.GoBILDA.RPM_1150);
+        transferMotor = new MotorEx(hardwareMap, HardwareMapNames.TRANSFER_MOTOR, Motor.GoBILDA.RPM_435);
 
         transferMotor.setRunMode(Motor.RunMode.RawPower);
         transferMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
@@ -100,7 +103,7 @@ public class TransferSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (transferState != TransferState.ZEROING) {
+        if (transferState != TransferState.ZEROING && transferState != TransferState.CONSTANT) {
             double output = 0;
 
             output += kF * Math.signum(getError());
@@ -109,7 +112,7 @@ public class TransferSubsystem extends SubsystemBase {
 
             output += kD * (getCurrentPosition() - previousPosition) / timer.getElapsedTimeSeconds();
 
-            if (Math.abs(getError()) > 20 && getError() > 0) {
+            if (Math.abs(getError()) > 0 && getError() > 0) {
                 output = maxProgressSpeed;
             }
 
@@ -117,13 +120,18 @@ public class TransferSubsystem extends SubsystemBase {
                 output = -0.1;
             }
 
-            output = Range.clip(output, -maxReturnSpeed, maxProgressSpeed);
+            output = Range.clip(output, -maxReturnSpeed, 0.4);
 
             transferMotor.set(output);
 
             previousPosition = getCurrentPosition();
             timer.resetTimer();
-        } else transferMotor.set(-1.0);
+        } else if (transferState == TransferState.CONSTANT) {
+            if (getError() > 0 && Math.abs(getError()) > 200) transferMotor.set(constantSpeed);
+            else if (getError() > 0) transferMotor.set(constantSpeed/2);
+            else transferMotor.set(0);
+        }
+        else transferMotor.set(-0.2); // Zeroing
     }
 
     public void setTransferState(TransferState transferState) {
@@ -167,5 +175,9 @@ public class TransferSubsystem extends SubsystemBase {
 
     public GatePosition getGatePosition() {
         return gatePosition;
+    }
+
+    public boolean isNearlyFinished() {
+        return getTransferState() == TransferSubsystem.TransferState.THREE && getError() < 50;
     }
 }

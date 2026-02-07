@@ -42,11 +42,13 @@ public class Robot {
 
         colorSensorManager = new ColorSensorManager(hardwareMap);
 
+        // y is 6
+        // x is 8
         if (team == Team.RED) {
-            GlobalDataStorage.goalPose = new Pose(144 - 10, 144 - 10);
+            GlobalDataStorage.goalPose = new Pose(141.5 - 8, 141.5 - 6);
         }
         else if (team == Team.BLUE) {
-            GlobalDataStorage.goalPose = new Pose(0 + 10, 144 - 10);
+            GlobalDataStorage.goalPose = new Pose(0 + 8, 141.5 - 6);
         }
 
         for (Subsystems subsystem : subsystems) {
@@ -57,18 +59,18 @@ public class Robot {
                 transfer = new TransferSubsystem(hardwareMap);
 
                 if (resetEncoder) {
-                    CommandScheduler.getInstance().schedule(new ZeroTransferCommand(transfer));
+                    CommandScheduler.getInstance().schedule(new ZeroTransferCommand(transfer, true, 250));
                 }
             }
             if (subsystem == Subsystems.SHOOTER) {
                 shooter = new ShooterSubsystem(hardwareMap);
             }
             if (subsystem == Subsystems.LOCALIZER) {
-                if (GlobalDataStorage.staticLocalizer == null) {
+                //if (GlobalDataStorage.staticLocalizer == null) {
                     localizer = new STATICLocalizer(hardwareMap, new Pose(72, 72, PI/2), STATICLocalizer.LocalizerMode.NO_ULTRASONICS);
-                } else {
-                    localizer = GlobalDataStorage.staticLocalizer;
-                }
+                //} else {
+                //    localizer = GlobalDataStorage.staticLocalizer;
+                //}
             }
             if (subsystem == Subsystems.DRIVE) {
                 drive = new Drive(hardwareMap, localizer);
@@ -83,10 +85,13 @@ public class Robot {
     // TODO is this neccessay?????????????🥸🥸🥸
     public Robot(HardwareMap hardwareMap, Team team, boolean resetEncoder) {
         this(hardwareMap, team, true, Robot.Subsystems.INTAKE, Subsystems.TRANSFER, Subsystems.SHOOTER, Subsystems.LOCALIZER, Subsystems.DRIVE);
+        this.drive.follower.setPose(GlobalDataStorage.robotPose);
     }
 
     public void update() {
         localizer.update();
+
+        GlobalDataStorage.robotPose = localizer.getPose();
 
         shooter.updateDistanceToGoal(localizer.getDistanceToGoal());
 

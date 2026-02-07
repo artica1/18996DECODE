@@ -82,10 +82,13 @@ public class STATICLocalizer implements Localizer {
 
         pinpoint.update();
 
+        /*
         if ((localizerMode == LocalizerMode.All || localizerMode == LocalizerMode.NO_ULTRASONICS) && llTimer.getElapsedTime() > 500) {
            setPose(limelightManager.getPose(getIMUHeading()));
            llTimer.resetTimer();
         }
+
+         */
     }
 
     @Override

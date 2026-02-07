@@ -21,39 +21,25 @@ import org.firstinspires.ftc.teamcode.HardwareMapNames;
 @Configurable
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(11.0)
-            .forwardZeroPowerAcceleration((-40.97 + -40.82 + -33.57 + -34.81) / 4)
-            .lateralZeroPowerAcceleration((-67.32 + -71.48 + -75.69 + -76.72) / 4)
-            .translationalPIDFCoefficients(new PIDFCoefficients(
-                    0.08,
-                    0,
-                    0.01,
-                    0.08
-            ))
+            .mass(11.3)
+            .forwardZeroPowerAcceleration(-37.5425)
+            .lateralZeroPowerAcceleration(-72.8025)
+
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.015, 0.1))
             .useSecondaryTranslationalPIDF(true)
-            .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(
-                    0.1,
-                    0,
-                    0.01,
-                    0.01
-            ))
-            .translationalPIDFSwitch(3)
-            .headingPIDFCoefficients(new PIDFCoefficients(
-                    1,
-                    0,
-                    0.05,
-                    0.02
-            ))
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(
-                    0.007,
-                    0,
-                    0.0010,
-                    0.4,
-                    0.02
-            ))
-            .centripetalScaling(0.0007)
-            .holdPointHeadingScaling(1)
-            .holdPointTranslationalScaling(1);
+            .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.15, 0, 0.00, 0.02))
+            .translationalPIDFSwitch(1)
+
+            .headingPIDFCoefficients(new PIDFCoefficients(1, 0, 0.1, 0.08))
+            .useSecondaryHeadingPIDF(true)
+            .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(1, 0, 0.00, 0.00))
+            .headingPIDFSwitch(0.0270796327)
+
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.02, 0, 0.0012, 0.6, 0.03))
+            .useSecondaryDrivePIDF(false) // KEEP THIS FRICKING FALSE
+            .drivePIDFSwitch(20)
+
+            .centripetalScaling(0.0005);
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
@@ -65,21 +51,19 @@ public class Constants {
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .xVelocity((74.56 + 75.78 + 76.36 + 75.84) / 4)
-            .yVelocity((57.61 + 57.82 + 58.65 + 58.02) / 4)
-            .useVoltageCompensation(true)
-            .nominalVoltage(12.65)
+            .xVelocity(75.635)
+            .yVelocity(58.025)
             .useBrakeModeInTeleOp(true);
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.995, 100, 0.8, 2);
+    public static PathConstraints pathConstraints = new PathConstraints(0.95, 100, 9, 1);
 
     public static PinpointConstants pinpointConstants = new PinpointConstants()
-            .forwardPodY(92)
+            .forwardPodY(-92)
             .strafePodX(-48)
             .distanceUnit(DistanceUnit.MM)
             .hardwareMapName(HardwareMapNames.PINPOINT)
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
-            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
+            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
     public static Follower createFollower(HardwareMap hardwareMap, Localizer localizer) {

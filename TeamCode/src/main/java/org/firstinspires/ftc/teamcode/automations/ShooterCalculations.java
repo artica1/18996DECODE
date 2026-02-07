@@ -5,7 +5,6 @@ import com.seattlesolvers.solverslib.util.InterpLUT;
 public class ShooterCalculations {
     private static final InterpLUT angleILUT = new InterpLUT();
     private static final InterpLUT speedILUT = new InterpLUT();
-    private static final InterpLUT transferILUT = new InterpLUT();
 
     public static double getSpeed(double dist) {
         return speedILUT.get(dist);
@@ -15,75 +14,55 @@ public class ShooterCalculations {
         return angleILUT.get(dist);
     }
 
-    public static double getTransferSpeed(double dist) {
-        return transferILUT.get(dist);
-    }
-
     static {
         // X MUST BE INCREASING ORDER WHEN ADDING
         // otherwise it literally crashes the entire robot with no error message so dont do it
 
         // bruh
-        angleILUT.add(-500, 10);
-        speedILUT.add(-500, 950);
-        transferILUT.add(-500, 1.0);
+        angleILUT.add(-500, 0);
+        speedILUT.add(-500, 1250);
+
+        angleILUT.add(30, 0);
+        speedILUT.add(30, 1250);
 
         // good ones
-        angleILUT.add(25, 15);
-        speedILUT.add(25, 1000);
-        transferILUT.add(25, 1.0);
+        angleILUT.add(40, 104);
+        speedILUT.add(40, 1350);
 
-        angleILUT.add(35, 20);
-        speedILUT.add(35, 1050);
-        transferILUT.add(35, 1.0);
+        angleILUT.add(50, 175);
+        speedILUT.add(50, 1450);
 
-        angleILUT.add(45, 25);
-        speedILUT.add(45, 1050);
-        transferILUT.add(45, 0.6);
+        angleILUT.add(60, 195);
+        speedILUT.add(60, 1550);
 
-        angleILUT.add(55, 30);
-        speedILUT.add(55, 1150);
-        transferILUT.add(55, 0.6);
+        angleILUT.add(67, 215);
+        speedILUT.add(67, 1550);
 
-        angleILUT.add(65, 30);
-        speedILUT.add(65, 1150);
-        transferILUT.add(65, 0.6);
+        angleILUT.add(70, 215);
+        speedILUT.add(70, 1600); // todo slightly lower
 
-        angleILUT.add(75, 35);
-        speedILUT.add(75, 1250);
-        transferILUT.add(75, 0.5);
+        angleILUT.add(80, 215);
+        speedILUT.add(80, 1650);
 
-        angleILUT.add(80, 40);
-        speedILUT.add(80, 1200);
-        transferILUT.add(80, 0.5);
+        // switch to 0.8 transfer
 
-        angleILUT.add(90, 40);
-        speedILUT.add(90, 1250);
-        transferILUT.add(90, 0.4);
+        angleILUT.add(90, 235);
+        speedILUT.add(90, 1750);
 
-        angleILUT.add(100, 45);
-        speedILUT.add(100, 1250);
+        angleILUT.add(100, 225);
+        speedILUT.add(100, 1750);
 
-        angleILUT.add(110, 45);
-        speedILUT.add(110, 1350);
+        angleILUT.add(148, 255);
+        speedILUT.add(148, 2100);
 
-        angleILUT.add(120, 45);
-        speedILUT.add(120, 1450);
-
-        angleILUT.add(130, 45);
-        speedILUT.add(130, 1450);
-
-        angleILUT.add(140, 45);
-        speedILUT.add(140, 1450);
-        // end of good
+        angleILUT.add(157, 255);
+        speedILUT.add(157, 2100);
 
         // ???
-        angleILUT.add(500, 45);
-        speedILUT.add(500, 1450);
-        transferILUT.add(500, 0.4);
+        angleILUT.add(500, 225);
+        speedILUT.add(500, 2100);
 
         speedILUT.createLUT();
         angleILUT.createLUT();
-        transferILUT.createLUT();
     }
 }

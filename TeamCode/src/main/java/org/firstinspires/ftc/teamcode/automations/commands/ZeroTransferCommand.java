@@ -9,28 +9,38 @@ import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 
 public class ZeroTransferCommand extends CommandBase {
     private TransferSubsystem transferSubsystem;
+    private boolean immediateOverride;
     private Timer timer;
     private int time;
 
-    public ZeroTransferCommand(TransferSubsystem transferSubsystem) {
-        this(transferSubsystem, 250);
-    }
-
-    public ZeroTransferCommand(TransferSubsystem transferSubsystem, int time) {
+    public ZeroTransferCommand(TransferSubsystem transferSubsystem, boolean immediateOverride, int time) {
         this.transferSubsystem = transferSubsystem;
+        this.immediateOverride = immediateOverride;
         timer = new Timer();
         this.time = time;
     }
 
     @Override
     public void initialize() {
-        transferSubsystem.setTransferState(TransferSubsystem.TransferState.ZEROING);
+        if (immediateOverride) transferSubsystem.setTransferState(TransferSubsystem.TransferState.ZEROING);
+        else transferSubsystem.setTransferState(TransferSubsystem.TransferState.INTAKE);
         timer.resetTimer();
     }
 
     @Override
+    public void execute() {
+        if (transferSubsystem.getTransferState() == TransferSubsystem.TransferState.INTAKE
+                && Math.abs(transferSubsystem.getError()) < 30)
+        {
+            transferSubsystem.setTransferState(TransferSubsystem.TransferState.ZEROING);
+            timer.resetTimer();
+        }
+    }
+
+    @Override
     public boolean isFinished() {
-        return timer.getElapsedTime() > 250;
+        return transferSubsystem.getTransferState() == TransferSubsystem.TransferState.ZEROING
+                && timer.getElapsedTime() > time;
     }
 
     @Override

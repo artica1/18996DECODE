@@ -1,14 +1,18 @@
 package org.firstinspires.ftc.teamcode.automations.commands;
 
+import com.pedropathing.util.Timer;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 
 import org.firstinspires.ftc.teamcode.Robot;
 import org.firstinspires.ftc.teamcode.automations.ShooterCalculations;
+import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 
 public class AutoShootCommand extends CommandBase {
     private final Robot robot;
+
+    private Timer overrideTimer;
 
     private int shootingState;
 
@@ -16,19 +20,22 @@ public class AutoShootCommand extends CommandBase {
 
     public AutoShootCommand(Robot robot) {
         this.robot = robot;
+        overrideTimer = new Timer();
     }
 
     @Override
     public void initialize() {
         setShootingState(0);
+        overrideTimer.resetTimer();
     }
 
     @Override
     public void execute() {
+        if (robot.drive.follower.getCurrentTValue() < 0.995) overrideTimer.resetTimer();
+
         if (shootingState == 0) {
-            if (Math.abs(robot.shooter.getError()) < 30 && Math.abs(robot.drive.follower.getHeadingError()) < 0.03) {
-                //progressTransferCommand = new ProgressTransferCommand(robot, true, ShooterCalculations.getTransferSpeed(robot.localizer.getDistanceToGoal()));
-                progressTransferCommand = new ProgressTransferCommand(robot, true, 0.4);
+            if ((Math.abs(robot.shooter.getError()) < 30 && Math.abs(robot.drive.follower.getHeadingError()) < 0.02 && !robot.drive.follower.isBusy() && robot.drive.follower.getTranslationalError().getMagnitude() < 5) || overrideTimer.getElapsedTime() > 30000) {
+                progressTransferCommand = new ProgressTransferCommand(robot, true);
                 CommandScheduler.getInstance().schedule(progressTransferCommand);
 
                 setShootingState(-1);

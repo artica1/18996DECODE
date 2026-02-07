@@ -18,6 +18,8 @@ public class GlobalDataStorage {
     public static STATICLocalizer staticLocalizer = null;
 
     public static Robot.Team autoTeam = Robot.Team.BLUE;
+   //public static Pose robotPose = new Pose(24, 24,0);
+    public static Pose robotPose = new Pose();
 
     public static TransferSubsystem.TransferState transferState = null;
 }

@@ -26,7 +26,6 @@ public class HoldPointCommand extends CommandBase {
         this.robot = robot;
     }
 
-    /*
     @Override
     public void initialize() {
         previousDriveMode = robot.drive.getDriveMode();
@@ -52,6 +51,4 @@ public class HoldPointCommand extends CommandBase {
     public void end(boolean interrupted) {
         if (!interrupted) robot.drive.setDriveMode(previousDriveMode);
     }
-
-         */
 }
