@@ -11,6 +11,7 @@ import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
@@ -27,6 +28,7 @@ import org.firstinspires.ftc.teamcode.automations.commands.ZeroTransferCommand;
 import org.firstinspires.ftc.teamcode.automations.drive.Drive;
 import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.ShooterSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 
 import java.util.List;
 
@@ -84,11 +86,25 @@ public class JudgeTele extends CommandOpMode {
                 .whenPressed(() -> {
                     schedule(new ZeroTransferCommand(robot.transfer, true,2000));
                 });
+
+        // EDIT INSTANCED
+        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_UP)
+                .whenPressed(() -> {
+                    TransferSubsystem.constantSpeed = Range.clip(TransferSubsystem.constantSpeed += 0.1, 0, 1);
+                });
+
+        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
+                .whenPressed(() -> {
+                    TransferSubsystem.constantSpeed = Range.clip(TransferSubsystem.constantSpeed -= 0.1, 0, 1);
+                });
     }
 
     @Override
     public void run() {
         robot.update();
         CommandScheduler.getInstance().run();
+
+        telemetry.addData("Speed", TransferSubsystem.constantSpeed);
+        telemetry.update();
     }
 }

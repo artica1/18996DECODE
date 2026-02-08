@@ -69,6 +69,9 @@ public class FullTeleop extends CommandOpMode {
     public void initialize() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
+        panelsTelemetry.addData("Team", GlobalDataStorage.autoTeam);
+        panelsTelemetry.update();
+
         robot = new Robot(hardwareMap, GlobalDataStorage.autoTeam, true);
 
         gamepad = new GamepadEx(gamepad1);
@@ -189,6 +192,7 @@ public class FullTeleop extends CommandOpMode {
         }
         previousVelocityError = Math.abs(robot.shooter.getError());
 
+        /*
         panelsTelemetry.addData("Transfer Speed", TransferSubsystem.constantSpeed);
 
         panelsTelemetry.addData("Current Tps", robot.shooter.getCurrentTps());
@@ -211,6 +215,8 @@ public class FullTeleop extends CommandOpMode {
 
         panelsTelemetry.addData("headingLock", robot.drive.isHeadingLock());
         panelsTelemetry.addData("translationalLock", robot.drive.isTranslationLock());
+
+         */
 
         panelsTelemetry.update(telemetry);
     }

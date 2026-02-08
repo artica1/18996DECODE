@@ -34,7 +34,7 @@ public class TwelveBallNoGate extends OpMode {
     private Timer pathTimer, autoTimer;
     private int pathState;
 
-    private Pose startPose, shootPose, intakeMark1StartPose, intakeMark1EndPose, intakeMark2StartPose, intakeMark2EndPose, intakeMark3StartPose, intakeMark3EndPose, parkPose, gatePreparePose, gateContactPose;
+    private Pose startPose, shootPose, intakeMark1StartPose, intakeMark1EndPose, intakeMark2StartPose, intakeMark2EndPose, intakeMark3StartPose, intakeMark3EndPose, parkPose, gatePreparePose, gateContactPose, gate1, gate2;
 
     public PathChain shootPreload, prepareMark1, intakeMark1, shootMark1, prepareMark2, intakeMark2, shootMark2, prepareMark3, intakeMark3, shootMark3, park, gatePrepare, gateContact;
 
@@ -63,10 +63,7 @@ public class TwelveBallNoGate extends OpMode {
         telemetry.addData("x", robot.localizer.getPose().getX());
         telemetry.addData("y", robot.localizer.getPose().getY());
         telemetry.addData("heading", robot.localizer.getPose().getHeading());
-        telemetry.addData("Pose", startPose);
-        telemetry.addData("Transfer", robot.transfer.getTransferState());
-        telemetry.addData("Power", robot.transfer.transferMotor.get());
-        telemetry.addData("Transfer Error", robot.transfer.getError());
+        telemetry.addData("Team", GlobalDataStorage.autoTeam);
         telemetry.update();
     }
 
@@ -331,8 +328,8 @@ public class TwelveBallNoGate extends OpMode {
         gateContact = robot.drive.follower.pathBuilder().addPath(
                         new BezierCurve(
                                 gatePreparePose,
-                                new Pose(26.44312796208532, 79.2867298578199),
-                                new Pose(22.17298578199052, 74.77962085308057),
+                                gate1,
+                                gate2,
                                 gateContactPose
                         )
                 ).setConstantHeadingInterpolation(gateContactPose.getHeading())
@@ -365,6 +362,9 @@ public class TwelveBallNoGate extends OpMode {
 
         parkPose = new Pose(42, 84, Math.toRadians(135));
 
+        gate1 = new Pose(26.44312796208532, 79.2867298578199);
+        gate2 = new Pose(22.17298578199052, 74.77962085308057);
+
         if (team == Robot.Team.RED) {
             startPose = startPose.mirror();
 
@@ -381,6 +381,9 @@ public class TwelveBallNoGate extends OpMode {
 
             gatePreparePose = gatePreparePose.mirror();
             gateContactPose = gateContactPose.mirror();
+
+            gate1 = gate1.mirror();
+            gate2 = gate2.mirror();
 
             parkPose = parkPose.mirror();
         }

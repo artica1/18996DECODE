@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.ShooterSubsystem;
 
 @Autonomous
-public class FarMinerva extends OpMode {
+public class Backup extends OpMode {
     private Robot robot;
 
     private Timer pathTimer, autoTimer;
@@ -141,39 +141,7 @@ public class FarMinerva extends OpMode {
                     autoShootCommand.schedule();
 
                     if (number < 2) setPathState(2);
-                    else setPathState(6);
-                }
-                break;
-            case 6:
-                if (autoShootCommand.isFinished()) {
-                    robot.drive.follower.setMaxPower(0.8);
-
-                    robot.intake.setIntakeState(IntakeSubsystem.IntakeState.INTAKE);
-
-
-                    robot.drive.follower.followPath(prepareMark3, false);
-
-                    setPathState(7);
-                }
-                break;
-            case 7:
-                if (!robot.drive.follower.isBusy()) {
-                    robot.drive.follower.setMaxPower(0.6);
-                    robot.drive.follower.followPath(intakeMark3, false);
-
-                    setPathState(8);
-                }
-                break;
-            case 8:
-                if (!robot.drive.follower.isBusy()) {
-
-                    robot.drive.follower.setMaxPower(0.6);
-                    robot.drive.follower.followPath(shootCorner, true);
-
-                    autoShootCommand = new AutoShootCommand(robot);
-                    autoShootCommand.schedule();
-
-                    setPathState(10);
+                    else setPathState(10);
                 }
                 break;
             case 10:
@@ -241,31 +209,6 @@ public class FarMinerva extends OpMode {
                         )
                 ).setConstantHeadingInterpolation(parkPose.getHeading())
                 .build();
-
-        prepareMark3 = robot.drive.follower.pathBuilder().addPath(
-                        new BezierLine(
-                                shootPose,
-                                intakeMark3StartPose
-                        )
-                 ).setLinearHeadingInterpolation(shootPose.getHeading(), intakeMark3StartPose.getHeading())
-                .build();
-
-        intakeMark3 = robot.drive.follower.pathBuilder().addPath(
-                        new BezierLine(
-                                intakeMark3StartPose,
-                                intakeMark3EndPose
-                        )
-                ).setLinearHeadingInterpolation(intakeMark3StartPose.getHeading(), intakeMark3EndPose.getHeading())
-                .build();
-
-        shootMark3 = robot.drive.follower.pathBuilder().addPath(
-                        new BezierLine(
-                                intakeMark3EndPose,
-                                shootPose
-                        )
-                ).setLinearHeadingInterpolation(intakeMark3EndPose.getHeading(), shootPose.getHeading())
-                .addParametricCallback(0.3, ()-> robot.intake.setIntakeState(IntakeSubsystem.IntakeState.HOLD))
-                .build();
     }
 
     public void buildPoses(Robot.Team team) {
@@ -273,7 +216,7 @@ public class FarMinerva extends OpMode {
         startPose = new Pose(56.9, 10.3, Math.toRadians(90));
         // 56.1 9.4
 
-        shootPose = new Pose(59.2, 20.2, Math.toRadians(111.0));
+        shootPose = new Pose(61.2, 20.2, Math.toRadians(111.5));
 
         // 16 11.7 -164.3
 
@@ -301,7 +244,6 @@ public class FarMinerva extends OpMode {
 
             intakeMark3StartPose = intakeMark3StartPose.mirror();
             intakeMark3EndPose = intakeMark3EndPose.mirror();
-
 
             parkPose = parkPose.mirror();
         }

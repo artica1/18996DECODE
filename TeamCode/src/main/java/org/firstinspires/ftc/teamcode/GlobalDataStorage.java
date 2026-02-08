@@ -17,7 +17,7 @@ public class GlobalDataStorage {
     public static Pose goalPose;
     public static STATICLocalizer staticLocalizer = null;
 
-    public static Robot.Team autoTeam = Robot.Team.BLUE;
+    public static Robot.Team autoTeam = Robot.Team.RED;
    //public static Pose robotPose = new Pose(24, 24,0);
     public static Pose robotPose = new Pose();
 
